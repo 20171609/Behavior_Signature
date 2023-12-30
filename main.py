@@ -31,18 +31,13 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
     dp = f"{dataset_path}_cs({change_src})_sepIP({separate_attackIP})"
 
-    if not os.path.isfile(f'./{dataset_path}/train_{dp}_feature.pkl'):
-        print("Profiling 시작")
-        b_profiling(train_path, f"train_{dp})", min_data)
-        print("Profiling 끝")
-        
-    else:
-        print("있는 feature랑 key 사용")
+    print("Profiling 시작")
+    b_profiling(train_path, f"train_{dp})", min_data)
+    print("Profiling 끝")
    
-    if not os.path.isfile(f'./{dataset_path}/test_{dp}_feature.pkl'):
-        print("test profiling 시작")
-        b_profiling(test_path, f"test_{dp})", min_data)
-        print("Test 끝")
+    print("test profiling 시작")
+    b_profiling(test_path, f"test_{dp})", min_data)
+    print("Test 끝")
 
     #데이터 불러오기
     with open(f'./{dataset_path}/train_{dp}_feature.pkl', 'rb') as f:
@@ -104,65 +99,57 @@ if __name__ == "__main__":
     try:
         for data in ['CTU-Rbot', 'CTU-Neris']:
             try:
-                for attack in [0, 1, 2]: # 0이 정상 1이 공격 2가 혼합
+                for attack in [True]:
                     try:
                         for change_feature in [True, False]:
                             try:
                                 for seperate in [True, False]:
                                     try:
-                                        for seperate_attackIP in [True,False]:
+                                        for change_src in [True, False]:
                                             try:
-                                                for change_src in [True, False]:
+                                                for test_method in [True, False]:
                                                     try:
-                                                        for test_method in [True, False]:
-                                                            try:
-                                                                for confidence in [1.28, 2.56]:
-                                                                    main(data, attack, change_feature, seperate, change_src, test_method, confidence)
-                                                            
-                                                            except:
-                                                                error_info = traceback.format_exc()
-                                                                with open('log.txt', 'a') as f:
-                                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
-                                                                    f.write(f"{error_info}\n\n")
-                                                                continue
+                                                        for confidence in [1.28, 2.56]:
+                                                            main(data, attack, change_feature, seperate, change_src, test_method, confidence)
+                                                    
                                                     except:
                                                         error_info = traceback.format_exc()
                                                         with open('log.txt', 'a') as f:
-                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
                                                             f.write(f"{error_info}\n\n")
                                                         continue
                                             except:
                                                 error_info = traceback.format_exc()
                                                 with open('log.txt', 'a') as f:
-                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
                                                     f.write(f"{error_info}\n\n")
                                                 continue
                                     except:
                                         error_info = traceback.format_exc()
                                         with open('log.txt', 'a') as f:
-                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
                                             f.write(f"{error_info}\n\n")
                                         continue
                             except:
                                 error_info = traceback.format_exc()
                                 with open('log.txt', 'a') as f:
-                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
                                     f.write(f"{error_info}\n\n")
                                 continue
                     except:
                         error_info = traceback.format_exc()
                         with open('log.txt', 'a') as f:
-                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
                             f.write(f"{error_info}\n\n")
                         continue
             except:
                 error_info = traceback.format_exc()
                 with open('log.txt', 'a') as f:
-                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
                     f.write(f"{error_info}\n\n")
                 continue 
     except:
         error_info = traceback.format_exc()
         with open('log.txt', 'a') as f:
-            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} test에서 에러 발생\n")
             f.write(f"{error_info}\n\n")   

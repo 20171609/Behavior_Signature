@@ -95,12 +95,24 @@ def b_profiling(data_path, save_path, min_data):
     profile_list = []
     profile_key_list = []
     profile_srcflag = []
+    feature = []
+
+    feature_func_map = global_.feature_func_map
+    feature_list = list(feature_func_map.keys()) 
 
     for file in data_path:
         flow_stack = {}
         print(file)
-        file_name = file.split('\\')[3].split('.')[0]
+        file_name = file.split('\\')[-1].split('.')[0]
         print(file_name)
+
+        sf = save_path.split('_')[-1]
+
+        if not os.path.isdir(f'./{sf}'):
+            os.mkdir(f'./{sf}')
+
+        if os.path.isfile(f'./{sf}/{save_path}_feature_{file_name}.pkl'):
+            continue
 
         with open(file, 'r', encoding='utf-8') as f:
             col = f.readline().strip().split(',')
@@ -151,36 +163,26 @@ def b_profiling(data_path, save_path, min_data):
 
                     if len(flow_stack[target_ip]['flow']) == min_data:
                         profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip, flow_stack[target_ip]['st_time'], flow_stack[target_ip]['end_time'])
-                        profile_list.append(profile)
+                        
+                        tmp = []
+                        for profile in tqdm(profile_list):
+                            for i, feature in enumerate(feature_list):
+                                tmp.append(feature_func_map[feature](profile))
+                        
+                        feature.append(tmp)
                         profile_key_list.append(f"{check_label(flow_stack[target_ip]['label'])}+{profile_key}+{file_name}")
                         profile_srcflag.append(sum(flow_stack[target_ip]['srcflag']))
                         flow_stack[target_ip]['flow'].pop(0)
                         flow_stack[target_ip]['label'].pop(0)
                         flow_stack[target_ip]['srcflag'].pop(0)
-                        flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])
+                        flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])               
 
-    feature_func_map = global_.feature_func_map
-    feature_list = list(feature_func_map.keys())                
-        
-    feature_matrix = [[] for _ in range(len(feature_list))]
+        with open(f'./{sf}/{save_path}_feature_{file_name}.pkl', 'wb') as f:
+            pickle.dump(feature, f)
 
-    for profile in tqdm(profile_list):
-        for i, feature in enumerate(feature_list):
-            feature_matrix[i].append(feature_func_map[feature](profile))
+        with open(f'./{sf}/{save_path}_key_{file_name}.pkl', 'wb') as f:
+            pickle.dump(profile_key_list, f)
 
-    feature = np.array(feature_matrix).T.tolist()
-    
-    sf = save_path.split('_')[-1]
-
-    if not os.path.isdir(f'./{sf}'):
-        os.mkdir(f'./{sf}')
-
-    with open(f'./{sf}/{save_path}_feature.pkl', 'wb') as f:
-        pickle.dump(feature, f)
-
-    with open(f'./{sf}/{save_path}_key.pkl', 'wb') as f:
-        pickle.dump(profile_key_list, f)
-
-    if global_.change_src:
-        with open(f'./{sf}/{save_path}_srcflag.pkl', 'wb') as f:
-            pickle.dump(profile_srcflag, f)
+        if global_.change_src:
+            with open(f'./{sf}/{save_path}_srcflag_{file_name}.pkl', 'wb') as f:
+                pickle.dump(profile_srcflag, f)
