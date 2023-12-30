@@ -289,7 +289,7 @@ def make_gmm(train_raw, train_key, n_components, save_path):
                                 max_iter=4000, n_jobs=6)
     pattern_gmm.fit(train_attack)
 
-    with open(f"{save_path}/{n_components}n_components_{global_.attack}attack.pkl", 'wb') as f:
+    with open(f"{save_path}/{n_components}n_components_{global_.attack}attack_{global_.change_src}cs.pkl", 'wb') as f:
         pickle.dump(pattern_gmm, f)
 
 if __name__ == '__main__':

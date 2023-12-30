@@ -56,11 +56,11 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         os.mkdir(f'./{save_path}')
 
     # GMM 생성 부분
-    if not os.path.isfile(f"{save_path}/{n_components}n_components_{attack}attack.pkl"):
+    if not os.path.isfile(f"{save_path}/{n_components}n_components_{attack}attack_{global_.change_src}cs.pkl"):
         print("GMM 생성 해야함")
         make_gmm(train_raw, train_key, n_components, save_path)
 
-    with open(f"{save_path}/{n_components}n_components_{attack}attack.pkl", 'rb') as f:
+    with open(f"{save_path}/{n_components}n_components_{attack}attack_{global_.change_src}cs.pkl", 'rb') as f:
         pattern_gmm = pickle.load(f)
 
     print(f"{n_components} {attack}attack GMM 불러옴")
