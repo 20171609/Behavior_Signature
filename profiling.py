@@ -163,7 +163,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip, flow_stack[target_ip]['st_time'], flow_stack[target_ip]['end_time'])
                         
                         tmp = []
-                        for profile in tqdm(profile_list):
+                        for profile in profile_list:
                             for i, feature in enumerate(feature_list):
                                 tmp.append(feature_func_map[feature](profile))
                         
