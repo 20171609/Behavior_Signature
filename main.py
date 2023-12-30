@@ -29,30 +29,32 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     
     global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method)
 
-    if not os.path.isfile(f'./{dataset_path}/train_{dataset_path}_feature.pkl'):
+    dp = f"{dataset_path}_cs({change_src})"
+
+    if not os.path.isfile(f'./{dataset_path}/train_{dp}_feature.pkl'):
         print("Profiling 시작")
-        b_profiling(train_path, f"train_{dataset_path}", min_data)
+        b_profiling(train_path, f"train_{dp})", min_data)
         print("Profiling 끝")
         
     else:
         print("있는 feature랑 key 사용")
-        
-    if not os.path.isfile(f'./{dataset_path}/test_{dataset_path}_feature.pkl'):
+   
+    if not os.path.isfile(f'./{dataset_path}/test_{dp}_feature.pkl'):
         print("test profiling 시작")
-        b_profiling(test_path, f"test_{dataset_path}", min_data)
+        b_profiling(test_path, f"test_{dp})", min_data)
         print("Test 끝")
-    
+
     #데이터 불러오기
-    with open(f'./{dataset_path}/train_{dataset_path}_feature.pkl', 'rb') as f:
+    with open(f'./{dataset_path}/train_{dp}_feature.pkl', 'rb') as f:
         train_raw = pickle.load(f)
 
-    with open(f'./{dataset_path}/train_{dataset_path}_key.pkl', 'rb') as f:
+    with open(f'./{dataset_path}/train_{dp}_key.pkl', 'rb') as f:
         train_key = pickle.load(f)
 
-    with open(f"./{dataset_path}/test_{dataset_path}_feature.pkl", "rb") as f:
+    with open(f"./{dataset_path}/test_{dp}_feature.pkl", "rb") as f:
         test_raw = pickle.load(f)
 
-    with open(f"./{dataset_path}/test_{dataset_path}_key.pkl", 'rb') as f:
+    with open(f"./{dataset_path}/test_{dp}_key.pkl", 'rb') as f:
         test_key = pickle.load(f)
 
     if not os.path.isdir(f'./{save_path}'):
@@ -73,12 +75,12 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
     if change_src:
-        with open(f'./{dataset_path}/train_{dataset_path}_srcflag.pkl', 'rb') as f:
+        with open(f'./{dataset_path}/train_{dp}_srcflag.pkl', 'rb') as f:
             train_src = pickle.load(f)
 
         train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
     
-        with open(f'./{dataset_path}/test_{dataset_path}_srcflag.pkl', 'rb') as f:
+        with open(f'./{dataset_path}/test_{dp}_srcflag.pkl', 'rb') as f:
             test_src = pickle.load(f)
 
         test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
@@ -102,7 +104,7 @@ if __name__ == "__main__":
     try:
         for data in ['CTU-Rbot', 'CTU-Neris']:
             try:
-                for attack in [True]:
+                for attack in [0, 1, 2]: # 0이 정상 1이 공격 2가 혼합
                     try:
                         for change_feature in [True, False]:
                             try:

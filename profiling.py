@@ -175,5 +175,6 @@ def b_profiling(data_path, save_path, min_data):
     with open(f'./{sf}/{save_path}_key.pkl', 'wb') as f:
         pickle.dump(profile_key_list, f)
 
-    with open(f'./{sf}/{save_path}_srcflag.pkl', 'wb') as f:
-        pickle.dump(profile_srcflag, f)
+    if global_.change_src:
+        with open(f'./{sf}/{save_path}_srcflag.pkl', 'wb') as f:
+            pickle.dump(profile_srcflag, f)
