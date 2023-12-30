@@ -106,9 +106,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         file_name = file.split('\\')[-1].split('.')[0]
         print(file_name)
 
-        if not os.path.isdir(f'./preprocessing/{dataset_path}/profiling'):
-            os.mkdir(f'./preprocessing/{dataset_path}/profiling')
-
         if not os.path.isdir(f'./preprocessing/{dataset_path}/profiling/{parameter}'):
             os.mkdir(f'./preprocessing/{dataset_path}/profiling/{parameter}')
 
