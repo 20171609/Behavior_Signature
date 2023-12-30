@@ -11,14 +11,14 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence):
+def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence, separate_attackIP):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
     min_data = 5
     # change_feature = True
     # change_src = True
-    separate_attackIP = False
+    # separate_attackIP = False
 
     # GMM에 사용
     n_components = 20
@@ -148,14 +148,14 @@ if __name__ == "__main__":
                             try:
                                 for seperate in [True, False]:
                                     try:
-                                        for seperate_attackIP in [False]:
+                                        for seperate_attackIP in [True, False]:
                                             try:
                                                 for change_src in [True, False]:
                                                     try:
                                                         for test_method in [True, False]:
                                                             try:
-                                                                for confidence in [1.28, 2.56]:
-                                                                    main(data, attack, change_feature, seperate, change_src, test_method, confidence)
+                                                                for confidence in [1.28, 2]:
+                                                                    main(data, attack, change_feature, seperate, change_src, test_method, confidence, seperate_attackIP)
                                                             
                                                             except:
                                                                 error_info = traceback.format_exc()
