@@ -257,7 +257,7 @@ class GMM_Pattering:
         tmp_data = self.transform(data, confidence)
         return self.tokenize(tmp_data)
 
-def make_gmm(train_raw, train_key, n_components, save_path):
+def make_gmm(train_raw, train_key, n_components, dp, dataset_path):
     train_attack = []
     if global_.attack == 1:
         for idx, key in enumerate(train_key):
@@ -289,8 +289,8 @@ def make_gmm(train_raw, train_key, n_components, save_path):
                                 max_iter=4000, n_jobs=6)
     pattern_gmm.fit(train_attack)
 
-    with open(f"{save_path}/{n_components}n_components_{global_.attack}attack_{global_.change_src}cs.pkl", 'wb') as f:
-        pickle.dump(pattern_gmm, f)
+    with open(f"./preprocessing/{dataset_path}/GMM/{dp}", 'wb') as f:
+        pickle.dump(f"./preprocessing/{dataset_path}/GMM/{dp}", f)
 
 if __name__ == '__main__':
     gmm_pattern = GMM_Pattering(ignore_idx=[0, 1, 2], n_components=3, random_seed=43, n_jobs=12)

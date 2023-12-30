@@ -75,27 +75,33 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         with open(file, 'rb') as f:
             train_key += pickle.load(f)
 
-    # 'test'로 시작하는 모든 파일 찾기
+    # 'test_feature'로 시작하는 모든 파일 찾기
     test_ffiles = glob.glob(os.path.join(folder, 'test_feature*'))
     for file in test_ffiles:
         with open(file, 'rb') as f:
             test_raw += pickle.load(f)
+    
+    # 'test_key'로 시작하는 모든 파일 찾기
+    test_kfiles = glob.glob(os.path.join(folder, 'test_key*'))
+    for file in test_kfiles:
+        with open(file, 'rb') as f:
+            test_key += pickle.load(f)
 
-    with open(f"./{dataset_path}/profiling/{dp}/test_{dp}_key.pkl", 'rb') as f:
-        test_key = pickle.load(f)
+    if not os.path.isdir(f'./preprocessing/{dataset_path}/GMM'):
+        os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
-    if not os.path.isdir(f'./{save_path}'):
-        os.mkdir(f'./{save_path}')
+    # GMM 이름
+    dp = f"n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_GMM.pkl"
 
     # GMM 생성 부분
-    if not os.path.isfile(f"{save_path}/{n_components}n_components_{attack}attack_{global_.change_src}cs.pkl"):
+    if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp}"):
         print("GMM 생성 해야함")
-        make_gmm(train_raw, train_key, n_components, save_path)
+        make_gmm(train_raw, train_key, n_components, dp, dataset_path)
 
-    with open(f"{save_path}/{n_components}n_components_{attack}attack_{global_.change_src}cs.pkl", 'rb') as f:
+    print(f"{n_components}n {attack}attack GMM 불러옴")
+    with open(f"./preprocessing/{dataset_path}/GMM/{dp}", 'rb') as f:
         pattern_gmm = pickle.load(f)
-
-    print(f"{n_components} {attack}attack GMM 불러옴")
+    
     # ip별 퀀타이제이션 셋 만들기
 
     train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
