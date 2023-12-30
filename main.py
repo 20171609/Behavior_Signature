@@ -91,19 +91,18 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
     # GMM 이름
-    dp = f"n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_GMM.pkl"
+    dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_GMM.pkl"
 
     # GMM 생성 부분
-    if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp}"):
+    if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}"):
         print("GMM 생성 해야함")
-        make_gmm(train_raw, train_key, n_components, dp, dataset_path)
+        make_gmm(train_raw, train_key, n_components, dp_GMM, dataset_path)
 
     print(f"{n_components}n {attack}attack GMM 불러옴")
-    with open(f"./preprocessing/{dataset_path}/GMM/{dp}", 'rb') as f:
+    with open(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}", 'rb') as f:
         pattern_gmm = pickle.load(f)
     
     # ip별 퀀타이제이션 셋 만들기
-
     train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
     test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
@@ -120,14 +119,20 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     
     train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set\
           = make_quantization_dict(train_data, train_key)
-    
+
     test_multi_dict, test_single_dict, test_label, _, _\
           = make_quantization_dict(test_data, test_key)
+    
+    if not os.path.isdir(f'./result'):
+        os.mkdir(f'./result')
+
+    if not os.path.isdir(f'./result/{dataset_path}'):
+        os.mkdir(f'./result/{dataset_path}')
 
     # evaluate
     print("평가 시작")
-    save_file = f"{save_path}/result_n({n_components})-min({min_data})-atk({attack})-cfd({confidence})-cf({change_feature})-cs({change_src})\
-        sep({seperate})-test({test_method}).csv"
+    file_name = f"cs({change_src})-cf({change_feature})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-sep({seperate})-test({test_method}).csv"
+    save_file = f"./result/{dataset_path}/{file_name}.csv"
     evaluate(train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set,\
              test_multi_dict, test_single_dict, test_label, save_file)
 
