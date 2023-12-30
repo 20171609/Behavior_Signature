@@ -124,14 +124,20 @@ def b_profiling(data_path, save_path, min_data):
                 now_time = get_int_time(flow[column_index['first']])
 
                 ip_set_list = [sip, dip, f"{sip}_{dip}", f"{dip}_{sip}"] if global_.seperate else [sip, dip]
-
+                
                 for target_ip in ip_set_list:
+                    check_star = False
+                    if global_.separate_attackIP and '*' in target_ip:
+                        check_star = True
+                        target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:
                         flow_stack[target_ip] = {'flow':[], 'label':[],  'srcflag' : []}
                         flow_stack[target_ip]['st_time'] = now_time
 
                     if "*" in target_ip.split('_')[0]:
-                        flow_stack[target_ip]['label'].append("Attack")
+                        flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                    elif check_star:
+                        flow_stack[target_ip]['label'].append(flow[column_index['Label']])
                     else:
                         flow_stack[target_ip]['label'].append('Benign')
 

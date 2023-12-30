@@ -1,6 +1,6 @@
 import numpy as np
 
-def initialize(path, change_src, change_feature, seperate_, attack_, test_method_):
+def initialize(path, change_src, change_feature, seperate_, attack_, test_method_,separate_attackIP_):
     global column_index
     
     with open(path, 'r', encoding='utf-8') as f:
@@ -13,11 +13,12 @@ def initialize(path, change_src, change_feature, seperate_, attack_, test_method
     global seperate
     global attack
     global test_method
-
+    global separate_attackIP
+    
     test_method = test_method_
     attack = attack_
     seperate = seperate_
-
+    separate_attackIP = separate_attackIP_
     attribute_map_inv = {'target_ip': 'destination', 'target_port': 'dst_port', 'opposite_ip': 'source', 'opposite_port': 'src_port',
                 'duration': 'duration', 'target_pkts': 'out_pkts', 'opposite_pkts': 'in_pkts',
                 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
