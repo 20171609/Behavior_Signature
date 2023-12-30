@@ -95,7 +95,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
     profile_list = []
     profile_key_list = []
     profile_srcflag = []
-    feature = []
 
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
@@ -167,7 +166,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         for i, feature in enumerate(feature_list):
                             tmp.append(feature_func_map[feature](profile))
                         
-                        feature.append(tmp)
+                        profile_list.append(tmp)
                         profile_key_list.append(f"{check_label(flow_stack[target_ip]['label'])}+{profile_key}+{file_name}")
                         profile_srcflag.append(sum(flow_stack[target_ip]['srcflag']))
                         flow_stack[target_ip]['flow'].pop(0)
@@ -176,7 +175,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])
 
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_feature_{file_name}.pkl', 'wb') as f:
-            pickle.dump(feature, f)
+            pickle.dump(profile_list, f)
 
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_key_{file_name}.pkl', 'wb') as f:
             pickle.dump(profile_key_list, f)
