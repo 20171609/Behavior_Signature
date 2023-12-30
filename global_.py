@@ -1,6 +1,6 @@
 import numpy as np
 
-def initialize(path, change_src, change_feature, seperate_, attack_, test_method_,separate_attackIP_):
+def initialize(path, change_src_, change_feature_, seperate_, attack_, test_method_,separate_attackIP_):
     global column_index
     
     with open(path, 'r', encoding='utf-8') as f:
@@ -14,6 +14,11 @@ def initialize(path, change_src, change_feature, seperate_, attack_, test_method
     global attack
     global test_method
     global separate_attackIP
+    global change_src
+    global change_feature
+
+    change_src = change_src_
+    change_feature = change_feature_
     
     test_method = test_method_
     attack = attack_
