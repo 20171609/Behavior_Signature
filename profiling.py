@@ -122,7 +122,10 @@ def b_profiling(data_path, save_path, min_data):
                 
                 sip, dip = flow[column_index['source']], flow[column_index['destination']]
                 now_time = get_int_time(flow[column_index['first']])
-                for target_ip in [sip, dip, f"{sip}_{dip}", f"{dip}_{sip}"]:
+
+                ip_set_list = [sip, dip, f"{sip}_{dip}", f"{dip}_{sip}"] if global_.seperate else [sip, dip]
+
+                for target_ip in ip_set_list:
                     if target_ip not in flow_stack:
                         flow_stack[target_ip] = {'flow':[], 'label':[],  'srcflag' : []}
                         flow_stack[target_ip]['st_time'] = now_time
