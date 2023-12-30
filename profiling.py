@@ -91,14 +91,14 @@ def add_flow(flow: list, target_ip):
     return attr_dict
 
 ## Behavior Profiling
-def b_profiling(data_path, save_path, min_data):
+def b_profiling(data_path, t, parameter, min_data, dataset_path):
     profile_list = []
     profile_key_list = []
     profile_srcflag = []
     feature = []
 
     feature_func_map = global_.feature_func_map
-    feature_list = list(feature_func_map.keys()) 
+    feature_list = list(feature_func_map.keys())
 
     for file in data_path:
         flow_stack = {}
@@ -106,12 +106,13 @@ def b_profiling(data_path, save_path, min_data):
         file_name = file.split('\\')[-1].split('.')[0]
         print(file_name)
 
-        sf = save_path.split('_')[-1]
+        if not os.path.isdir(f'./preprocessing/{dataset_path}/profiling'):
+            os.mkdir(f'./preprocessing/{dataset_path}/profiling')
 
-        if not os.path.isdir(f'./{sf}'):
-            os.mkdir(f'./{sf}')
+        if not os.path.isdir(f'./preprocessing/{dataset_path}/profiling/{parameter}'):
+            os.mkdir(f'./preprocessing/{dataset_path}/profiling/{parameter}')
 
-        if os.path.isfile(f'./{sf}/{save_path}_feature_{file_name}.pkl'):
+        if os.path.isfile(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_feature_{file_name}.pkl'):
             continue
 
         with open(file, 'r', encoding='utf-8') as f:
@@ -175,14 +176,14 @@ def b_profiling(data_path, save_path, min_data):
                         flow_stack[target_ip]['flow'].pop(0)
                         flow_stack[target_ip]['label'].pop(0)
                         flow_stack[target_ip]['srcflag'].pop(0)
-                        flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])               
+                        flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])
 
-        with open(f'./{sf}/{save_path}_feature_{file_name}.pkl', 'wb') as f:
+        with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_feature_{file_name}.pkl', 'wb') as f:
             pickle.dump(feature, f)
 
-        with open(f'./{sf}/{save_path}_key_{file_name}.pkl', 'wb') as f:
+        with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_key_{file_name}.pkl', 'wb') as f:
             pickle.dump(profile_key_list, f)
 
         if global_.change_src:
-            with open(f'./{sf}/{save_path}_srcflag_{file_name}.pkl', 'wb') as f:
+            with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_srcflag_{file_name}.pkl', 'wb') as f:
                 pickle.dump(profile_srcflag, f)

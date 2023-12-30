@@ -2,6 +2,7 @@ import os
 import gc
 import csv
 import pickle
+import glob
 
 import matplotlib.pyplot as plt
 from GMM_Quantization import make_gmm
@@ -11,45 +12,76 @@ from profiling import b_profiling
 import traceback
 
 def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence):
-    # dataset_path = "CTU-Rbot"
+    # dataset_path = "CTU-Rbot"\
+
+    # Profiling에 사용
     min_data = 5
+    # change_feature = True
+    # change_src = True
+    separate_attackIP = False
+
+    # GMM에 사용
     n_components = 20
     # attack = True
     # confidence = 1.28
-    
-    # change_feature = True
-    # change_src = True
-    # seperate = True
+
+    # test할 때 사용
+    # seperate = True (얜 GMM도)
     # test_method = True
-    separate_attackIP = False
-    save_path = f"{dataset_path}-sep({seperate})-cs({change_src})-cf({change_feature})-atk({attack})-n({n_components})-min({min_data})-confidence({confidence})-Test({test_method})"
 
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
-    
+
     global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method,separate_attackIP)
 
-    dp = f"{dataset_path}_cs({change_src})_sepIP({separate_attackIP})"
+    dp = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
+    parameter = '_'.join(dp.split('_')[1:])
+
+    if not os.path.isdir(f"./preprocessing"):
+        os.mkdir(f"./preprocessing")
+
+    if not os.path.isdir(f"./preprocessing/{dataset_path}"):
+        os.mkdir(f"./preprocessing/{dataset_path}")
+
+    if not os.path.isdir(f'./preprocessing/{dataset_path}/profiling'):
+        os.mkdir(f'./preprocessing/{dataset_path}/profiling')
 
     print("Profiling 시작")
-    b_profiling(train_path, f"train_{dp})", min_data)
+    b_profiling(train_path, "train", parameter, min_data, dataset_path)
     print("Profiling 끝")
-   
+
     print("test profiling 시작")
-    b_profiling(test_path, f"test_{dp})", min_data)
+    b_profiling(test_path, "test", parameter, min_data, dataset_path)
     print("Test 끝")
 
+    train_raw = []
+    train_key = []
+
+    test_raw = []
+    test_key = []
+
     #데이터 불러오기
-    with open(f'./{dataset_path}/train_{dp}_feature.pkl', 'rb') as f:
-        train_raw = pickle.load(f)
+    folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
+    
+    # 'train_feature'으로 시작하는 모든 파일 찾기
+    train_ffiles = glob.glob(os.path.join(folder, 'train_feature*'))
+    for file in train_ffiles:
+        with open(file, 'rb') as f:
+            train_raw += pickle.load(f)
+    
+    # 'train_key'로 시작하는 모든 파일 찾기
+    train_kfiles = glob.glob(os.path.join(folder, 'train_key*'))
+    for file in train_kfiles:
+        with open(file, 'rb') as f:
+            train_key += pickle.load(f)
 
-    with open(f'./{dataset_path}/train_{dp}_key.pkl', 'rb') as f:
-        train_key = pickle.load(f)
+    # 'test'로 시작하는 모든 파일 찾기
+    test_ffiles = glob.glob(os.path.join(folder, 'test_feature*'))
+    for file in test_ffiles:
+        with open(file, 'rb') as f:
+            test_raw += pickle.load(f)
 
-    with open(f"./{dataset_path}/test_{dp}_feature.pkl", "rb") as f:
-        test_raw = pickle.load(f)
-
-    with open(f"./{dataset_path}/test_{dp}_key.pkl", 'rb') as f:
+    with open(f"./{dataset_path}/profiling/{dp}/test_{dp}_key.pkl", 'rb') as f:
         test_key = pickle.load(f)
 
     if not os.path.isdir(f'./{save_path}'):
@@ -105,7 +137,7 @@ if __name__ == "__main__":
                             try:
                                 for seperate in [True, False]:
                                     try:
-                                        for seperate_attackIP in [True,False]:
+                                        for seperate_attackIP in [False]:
                                             try:
                                                 for change_src in [True, False]:
                                                     try:
