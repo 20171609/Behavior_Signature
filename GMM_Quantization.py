@@ -290,7 +290,7 @@ def make_gmm(train_raw, train_key, n_components, dp, dataset_path):
     pattern_gmm.fit(train_attack)
 
     with open(f"./preprocessing/{dataset_path}/GMM/{dp}", 'wb') as f:
-        pickle.dump(f"./preprocessing/{dataset_path}/GMM/{dp}", f)
+        pickle.dump(pattern_gmm, f)
 
 if __name__ == '__main__':
     gmm_pattern = GMM_Pattering(ignore_idx=[0, 1, 2], n_components=3, random_seed=43, n_jobs=12)
