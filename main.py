@@ -107,13 +107,23 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
     if change_src:
-        with open(f'./{dataset_path}/train_{dp}_srcflag.pkl', 'rb') as f:
-            train_src = pickle.load(f)
+        #데이터 불러오기
+        folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
+
+        train_src = []
+        test_src = []
+        # 'train_feature'으로 시작하는 모든 파일 찾기
+        train_ffiles_src = glob.glob(os.path.join(folder, 'train_srcflag*'))
+        for file in train_ffiles_src:
+            with open(file, 'rb') as f:
+                train_src += pickle.load(f)
 
         train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
     
-        with open(f'./{dataset_path}/test_{dp}_srcflag.pkl', 'rb') as f:
-            test_src = pickle.load(f)
+        test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
+        for file in test_ffiles_src:
+            with open(file, 'rb') as f:
+                test_src += pickle.load(f)
 
         test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
     
