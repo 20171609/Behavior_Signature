@@ -3,6 +3,7 @@ import gc
 import csv
 import pickle
 import glob
+from datetime import datetime 
 
 import matplotlib.pyplot as plt
 from GMM_Quantization import make_gmm
@@ -10,6 +11,8 @@ import global_
 from utils import *
 from profiling import b_profiling
 import traceback
+
+
 
 def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence, separate_attackIP):
     # dataset_path = "CTU-Rbot"\
@@ -171,46 +174,62 @@ if __name__ == "__main__":
                                                                 error_info = traceback.format_exc()
                                                                 with open('log.txt', 'a') as f:
                                                                     f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                                    now = datetime.now()
+                                                                    f.write(f"time: {now}\n")
                                                                     f.write(f"{error_info}\n\n")
                                                                 continue
                                                     except:
                                                         error_info = traceback.format_exc()
                                                         with open('log.txt', 'a') as f:
                                                             f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                            now = datetime.now()
+                                                            f.write(f"time: {now}\n")
                                                             f.write(f"{error_info}\n\n")
                                                         continue
                                             except:
                                                 error_info = traceback.format_exc()
                                                 with open('log.txt', 'a') as f:
                                                     f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                    now = datetime.now()
+                                                    f.write(f"time: {now}\n")
                                                     f.write(f"{error_info}\n\n")
                                                 continue
                                     except:
                                         error_info = traceback.format_exc()
                                         with open('log.txt', 'a') as f:
                                             f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                            now = datetime.now()
+                                            f.write(f"time: {now}\n")
                                             f.write(f"{error_info}\n\n")
                                         continue
                             except:
                                 error_info = traceback.format_exc()
                                 with open('log.txt', 'a') as f:
                                     f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                    now = datetime.now()
+                                    f.write(f"time: {now}\n")
                                     f.write(f"{error_info}\n\n")
                                 continue
                     except:
                         error_info = traceback.format_exc()
                         with open('log.txt', 'a') as f:
                             f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                            now = datetime.now()
+                            f.write(f"time: {now}\n")
                             f.write(f"{error_info}\n\n")
                         continue
             except:
                 error_info = traceback.format_exc()
                 with open('log.txt', 'a') as f:
                     f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                    now = datetime.now()
+                    f.write(f"time: {now}\n")
                     f.write(f"{error_info}\n\n")
                 continue 
     except:
         error_info = traceback.format_exc()
         with open('log.txt', 'a') as f:
             f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+            now = datetime.now()
+            f.write(f"time: {now}\n")
             f.write(f"{error_info}\n\n")   
