@@ -92,14 +92,16 @@ def add_flow(flow: list, target_ip):
 
 ## Behavior Profiling
 def b_profiling(data_path, t, parameter, min_data, dataset_path):
-    profile_list = []
-    profile_key_list = []
-    profile_srcflag = []
+    
 
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
     for file in data_path:
+        profile_list = []
+        profile_key_list = []
+        profile_srcflag = []
+        
         flow_stack = {}
         print(file)
         file_name = file.split('\\')[-1].split('.')[0]
@@ -183,3 +185,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         if global_.change_src:
             with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_srcflag_{file_name}.pkl', 'wb') as f:
                 pickle.dump(profile_srcflag, f)
+        del profile_list
+        del profile_key_list
+        del profile_srcflag
