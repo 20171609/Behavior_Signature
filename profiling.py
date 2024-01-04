@@ -138,7 +138,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                 
                 for target_ip in ip_set_list:
                     check_star = False
-                    if global_.separate_attackIP and '*' in target_ip:
+                    
+                    if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
                         check_star = True
                         target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:

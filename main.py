@@ -38,7 +38,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method,separate_attackIP)
 
     dp = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
-    parameter = '_'.join(dp.split('_')[1:])
+    parameter = '_'.join(dp.split('_'))
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -68,24 +68,28 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     
     # 'train_feature'으로 시작하는 모든 파일 찾기
     train_ffiles = glob.glob(os.path.join(folder, 'train_feature*'))
+    train_ffiles.sort()
     for file in train_ffiles:
         with open(file, 'rb') as f:
             train_raw += pickle.load(f)
     
     # 'train_key'로 시작하는 모든 파일 찾기
     train_kfiles = glob.glob(os.path.join(folder, 'train_key*'))
+    train_kfiles.sort()
     for file in train_kfiles:
         with open(file, 'rb') as f:
             train_key += pickle.load(f)
 
     # 'test_feature'로 시작하는 모든 파일 찾기
     test_ffiles = glob.glob(os.path.join(folder, 'test_feature*'))
+    test_ffiles.sort()
     for file in test_ffiles:
         with open(file, 'rb') as f:
             test_raw += pickle.load(f)
     
     # 'test_key'로 시작하는 모든 파일 찾기
     test_kfiles = glob.glob(os.path.join(folder, 'test_key*'))
+    test_kfiles.sort()
     for file in test_kfiles:
         with open(file, 'rb') as f:
             test_key += pickle.load(f)
@@ -94,7 +98,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
     # GMM 이름
-    dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_GMM.pkl"
+    dp_GMM = f"cs({change_src})_cf({change_feature})_n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_GMM.pkl"
 
     # GMM 생성 부분
     if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}"):
@@ -117,6 +121,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         test_src = []
         # 'train_feature'으로 시작하는 모든 파일 찾기
         train_ffiles_src = glob.glob(os.path.join(folder, 'train_srcflag*'))
+        train_ffiles_src.sort()
         for file in train_ffiles_src:
             with open(file, 'rb') as f:
                 train_src += pickle.load(f)
@@ -124,6 +129,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
     
         test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
+        test_ffiles_src.sort()
         for file in test_ffiles_src:
             with open(file, 'rb') as f:
                 test_src += pickle.load(f)
@@ -153,21 +159,21 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Rbot', 'CTU-Neris']:
+        for data in ['CTU-Rbot','CTU-Neris']:
             try:
                 for attack in [0, 1, 2]: # 0이 정상 1이 공격 2가 혼합
                     try:
                         for change_feature in [True, False]:
                             try:
-                                for seperate in [True, False]:
+                                for seperate in [False]:
                                     try:
-                                        for seperate_attackIP in [True, False]:
+                                        for seperate_attackIP in [False]:
                                             try:
                                                 for change_src in [True, False]:
                                                     try:
-                                                        for test_method in [True, False]:
+                                                        for test_method in [True]:#true가 membership check
                                                             try:
-                                                                for confidence in [1.28, 2]:
+                                                                for confidence in [1.28]:
                                                                     main(data, attack, change_feature, seperate, change_src, test_method, confidence, seperate_attackIP)
                                                             
                                                             except:
