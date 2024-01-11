@@ -110,11 +110,6 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
     test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_train_data.pkl", 'wb') as f:
-        pickle.dump(train_data,f)
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_test_data.pkl", 'wb') as f:
-        pickle.dump(test_data,f)
-
     if not change_src:
         #데이터 불러오기
         folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
@@ -162,17 +157,23 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
         test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_port)]
 
+    
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_train_data.pkl", 'wb') as f:
+        pickle.dump(train_data,f)
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_test_data.pkl", 'wb') as f:
+        pickle.dump(test_data,f)
+
     train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set\
           = make_quantization_dict(train_data, train_key)
 
     test_multi_dict, test_single_dict, test_label, _, _\
           = make_quantization_dict(test_data, test_key)
 
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_train_multi_dict.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_train_multi_dict.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_test_multi_dict.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_test_multi_dict.pkl", 'wb') as f:
         pickle.dump(test_multi_dict,f)
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_attack_quantization_multi_set.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_attack_quantization_multi_set.pkl", 'wb') as f:
         pickle.dump(attack_quantization_multi_set,f)
 
     if not os.path.isdir(f'./result'):
