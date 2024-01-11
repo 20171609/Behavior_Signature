@@ -80,6 +80,9 @@ def add_flow(flow: list, target_ip):
     target_ip = target_ip.split('_')[0]
     sip = flow[global_.column_index['source']]
 
+    if "*" in sip and global_.separate_attackIP:
+        sip = sip.replace('*','')
+
     attr_map = {}
     if target_ip == sip:
         attr_map = global_.attribute_map
@@ -163,7 +166,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                     if len(flow_stack[target_ip]['flow']) == min_data:
                         profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip, flow_stack[target_ip]['st_time'], flow_stack[target_ip]['end_time'])
-                        
+
                         tmp = []
 
                         for i, feature in enumerate(feature_list):
@@ -183,7 +186,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_key_{file_name}.pkl', 'wb') as f:
             pickle.dump(profile_key_list, f)
 
-        if global_.change_src:
+        if not global_.change_src:
             with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_srcflag_{file_name}.pkl', 'wb') as f:
                 pickle.dump(profile_srcflag, f)
         del profile_list

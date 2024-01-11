@@ -6,7 +6,7 @@ def initialize(path, change_src_, change_feature_, seperate_, attack_, test_meth
     with open(path, 'r', encoding='utf-8') as f:
         col = f.readline().strip().split(',')
         column_index = {i : idx for idx, i in enumerate(col)}
-    
+
     global attribute_map
     global attribute_map_inv
     global feature_func_map
@@ -19,29 +19,29 @@ def initialize(path, change_src_, change_feature_, seperate_, attack_, test_meth
 
     change_src = change_src_
     change_feature = change_feature_
-    
+
     test_method = test_method_
     attack = attack_
     seperate = seperate_
     separate_attackIP = separate_attackIP_
-    attribute_map_inv = {'target_ip': 'destination', 'target_port': 'dst_port', 'opposite_ip': 'source', 'opposite_port': 'src_port',
+    attribute_map = {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 'opposite_port': 'dst_port',
                 'duration': 'duration', 'target_pkts': 'out_pkts', 'opposite_pkts': 'in_pkts',
                 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
                 'start_time' : 'first', 'end_time' : 'last'} if change_src \
                  else {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 
-                    'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'in_pkts', 
-                    'opposite_pkts': 'out_pkts', 'target_bytes': 'in_bytes', 'opposite_bytes': 'out_bytes',
+                   'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'out_pkts', 
+                   'opposite_pkts': 'in_pkts', 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
                     'start_time' : 'first', 'end_time' : 'last'}
 
-    attribute_map = {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 
-                        'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'in_pkts', 
+    attribute_map_inv = {'target_ip': 'destination', 'target_port': 'dst_port', 'opposite_ip': 'source', 
+                        'opposite_port': 'src_port', 'duration': 'duration', 'target_pkts': 'in_pkts', 
                         'opposite_pkts': 'out_pkts', 'target_bytes': 'in_bytes', 'opposite_bytes': 'out_bytes',
                         'start_time' : 'first', 'end_time' : 'last'} if change_src else\
                     {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 
-                        'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'in_pkts', 
-                        'opposite_pkts': 'out_pkts', 'target_bytes': 'in_bytes', 'opposite_bytes': 'out_bytes',
-                        'start_time' : 'first', 'end_time' : 'last'}
-    
+                   'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'out_pkts', 
+                   'opposite_pkts': 'in_pkts', 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
+                    'start_time' : 'first', 'end_time' : 'last'}
+
     feature_func_map = {
         'card_target_port':
             lambda x: len(set(x['target_port'])),

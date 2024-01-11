@@ -37,8 +37,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
     global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method,separate_attackIP)
 
-    dp = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
-    parameter = '_'.join(dp.split('_'))
+    parameter = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -98,7 +97,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
     # GMM 이름
-    dp_GMM = f"cs({change_src})_cf({change_feature})_n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_GMM.pkl"
+    dp_GMM = f"cs({change_src})_cf({change_feature})_n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_sepIP({separate_attackIP})_GMM.pkl"
 
     # GMM 생성 부분
     if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}"):
@@ -113,7 +112,12 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
     test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
-    if change_src:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_train_data.pkl", 'wb') as f:
+        pickle.dump(train_data,f)
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_test_data.pkl", 'wb') as f:
+        pickle.dump(test_data,f)
+
+    if not change_src:
         #데이터 불러오기
         folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
 
@@ -135,13 +139,20 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
                 test_src += pickle.load(f)
 
         test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
-    
+
     train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set\
           = make_quantization_dict(train_data, train_key)
 
     test_multi_dict, test_single_dict, test_label, _, _\
           = make_quantization_dict(test_data, test_key)
-    
+
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_train_multi_dict.pkl", 'wb') as f:
+        pickle.dump(train_multi_dict,f)
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_test_multi_dict.pkl", 'wb') as f:
+        pickle.dump(test_multi_dict,f)
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_attack_quantization_multi_set.pkl", 'wb') as f:
+        pickle.dump(attack_quantization_multi_set,f)
+
     if not os.path.isdir(f'./result'):
         os.mkdir(f'./result')
 
@@ -161,17 +172,17 @@ if __name__ == "__main__":
     try:
         for data in ['CTU-Rbot','CTU-Neris']:
             try:
-                for attack in [0, 1, 2]: # 0이 정상 1이 공격 2가 혼합
+                for attack in [0]: # 0이 정상 1이 공격 2가 혼합
                     try:
-                        for change_feature in [True, False]:
+                        for change_feature in [False]:
                             try:
                                 for seperate in [False]:
                                     try:
-                                        for seperate_attackIP in [False]:
+                                        for seperate_attackIP in [True]:
                                             try:
-                                                for change_src in [True, False]:
+                                                for change_src in [True]:
                                                     try:
-                                                        for test_method in [True]:#true가 membership check
+                                                        for test_method in [True]: # true가 membership check
                                                             try:
                                                                 for confidence in [1.28]:
                                                                     main(data, attack, change_feature, seperate, change_src, test_method, confidence, seperate_attackIP)
