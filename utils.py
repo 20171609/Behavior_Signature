@@ -40,9 +40,6 @@ def make_quantization_dict(train_data, train_key):
     attack_quantization_single_set = set()
     attack_quantization_multi_set = set()
 
-    normal_quantization_single_set = set()
-    normal_quantization_multi_set = set()
-
     if global_.seperate:
         
         for idx, key in enumerate(tqdm(train_key)):
@@ -57,9 +54,7 @@ def make_quantization_dict(train_data, train_key):
                 
                 if label.upper() != 'BENIGN':
                     attack_quantization_single_set.add(train_data[idx])
-                
-                else:
-                    normal_quantization_single_set.add(train_data[idx])
+
                 
             elif len(tmp_key.split('_')) == 3:
                 if target_ip not in train_multi_dict:
@@ -67,9 +62,6 @@ def make_quantization_dict(train_data, train_key):
                 train_multi_dict[target_ip].add(train_data[idx])
                 if label.upper() != 'BENIGN':
                     attack_quantization_multi_set.add(train_data[idx])
-                
-                else:
-                    normal_quantization_multi_set.add(train_data[idx])
                     
             if target_ip not in train_label:
                 train_label[target_ip] = set()
@@ -87,17 +79,11 @@ def make_quantization_dict(train_data, train_key):
                 train_multi_dict[target_ip].add(train_data[idx])
                 if label.upper() != 'BENIGN':
                     attack_quantization_multi_set.add(train_data[idx])
-                
-                else:
-                    normal_quantization_multi_set.add(train_data[idx])
 
             if target_ip not in train_label:
                 train_label[target_ip] = set()
                 
             train_label[target_ip].add(label)
-        
-    attack_quantization_multi_set -= normal_quantization_multi_set
-    attack_quantization_single_set -= normal_quantization_single_set
 
     return train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set
 
