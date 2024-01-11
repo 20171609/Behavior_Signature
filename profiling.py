@@ -3,6 +3,7 @@ import global_
 from tqdm.auto import tqdm
 import pickle
 import os
+from collections import Counter
 
 class Profile:
 
@@ -104,6 +105,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         profile_list = []
         profile_key_list = []
         profile_srcflag = []
+        profile_protflag = []
+        profile_port = []
         
         flow_stack = {}
         print(file)
@@ -146,7 +149,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         check_star = True
                         target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:
-                        flow_stack[target_ip] = {'flow':[], 'label':[],  'srcflag' : []}
+                        flow_stack[target_ip] = {'flow':[], 'label':[],  'srcflag' : [], 'protCount' : [], 'srcPort' : [], 'dstPort' : []}
                         flow_stack[target_ip]['st_time'] = now_time
 
                     if "*" in target_ip.split('_')[0]:
@@ -156,10 +159,35 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                     else:
                         flow_stack[target_ip]['label'].append('Benign')
 
+                    #if not global_.change_src:
                     if target_ip.split('_')[0] == sip:
                         flow_stack[target_ip]['srcflag'].append(1)
                     else:
                         flow_stack[target_ip]['srcflag'].append(0)
+
+                    #if global_.count_prot:
+                    flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
+
+                    src_port = int_prot(flow[column_index['src_port']])
+                    dst_port = int_prot(flow[column_index['dst_port']])
+                    #if global_.usingPort:
+                    if global_.separate_attackIP:
+                        
+                        if target_ip == sip:
+                            flow_stack[target_ip]['srcPort'].append(0 if src_port <= 1024 else 1)
+                            flow_stack[target_ip]['dstPort'].append(0 if dst_port <= 1024 else 1)
+                        else:
+                            flow_stack[target_ip]['srcPort'].append(0 if dst_port <= 1024 else 1)
+                            flow_stack[target_ip]['dstPort'].append(0 if src_port <= 1024 else 1)
+                    
+                    else:
+                        check_ip = target_ip.replace("*", "")
+                        if check_ip == sip:
+                            flow_stack[target_ip]['srcPort'].append(0 if src_port <= 1024 else 1)
+                            flow_stack[target_ip]['dstPort'].append(0 if dst_port <= 1024 else 1)
+                        else:
+                            flow_stack[target_ip]['srcPort'].append(0 if dst_port <= 1024 else 1)
+                            flow_stack[target_ip]['dstPort'].append(0 if src_port <= 1024 else 1)
 
                     flow_stack[target_ip]['flow'].append(flow)
                     flow_stack[target_ip]['end_time'] = now_time
@@ -174,11 +202,39 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         
                         profile_list.append(tmp)
                         profile_key_list.append(f"{check_label(flow_stack[target_ip]['label'])}+{profile_key}+{file_name}")
+
+                        #if not global_.change_src:
                         profile_srcflag.append(sum(flow_stack[target_ip]['srcflag']))
+                        flow_stack[target_ip]['srcflag'].pop(0)
+                        
+                        #if global_.count_prot:
+                        count_tmp = [0, 0, 0] # tcp, udp, icmp
+
+                        for p in flow_stack[target_ip]['protCount']:
+                            if p.upper() == 'TCP' or p == '6':
+                                count_tmp[0] += 1
+                            
+                            elif p.upper() == 'UDP' or p == '17':
+                                count_tmp[1] += 1
+                            
+                            elif p.upper() == 'ICMP' or p == '1':
+                                count_tmp[2] += 1
+
+                        profile_protflag.append(count_tmp)
+                        flow_stack[target_ip]['protCount'].pop(0)
+
+                        port_tmp = [sum(flow_stack[target_ip]['srcPort']), sum(flow_stack[target_ip]['dstPort'])]
+                        profile_port.append(port_tmp)
+                        
                         flow_stack[target_ip]['flow'].pop(0)
                         flow_stack[target_ip]['label'].pop(0)
-                        flow_stack[target_ip]['srcflag'].pop(0)
+
+                        flow_stack[target_ip]['srcPort'].pop(0)
+                        flow_stack[target_ip]['dstPort'].pop(0)
+                        
                         flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])
+
+
 
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_feature_{file_name}.pkl', 'wb') as f:
             pickle.dump(profile_list, f)
@@ -186,9 +242,17 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_key_{file_name}.pkl', 'wb') as f:
             pickle.dump(profile_key_list, f)
 
-        if not global_.change_src:
-            with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_srcflag_{file_name}.pkl', 'wb') as f:
-                pickle.dump(profile_srcflag, f)
+        with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_srcflag_{file_name}.pkl', 'wb') as f:
+            pickle.dump(profile_srcflag, f)
+
+        with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_protflag_{file_name}.pkl', 'wb') as f:
+            pickle.dump(profile_protflag, f)
+
+        with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_wellport_{file_name}.pkl', 'wb') as f:
+            pickle.dump(profile_port, f)
+
         del profile_list
         del profile_key_list
         del profile_srcflag
+        del profile_protflag
+        del profile_port

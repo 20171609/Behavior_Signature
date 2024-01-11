@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence, separate_attackIP, count_prot):
+def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence, separate_attackIP, count_prot, using_port):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -29,11 +29,12 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     # test할 때 사용
     # seperate = True (얜 GMM도)
     # test_method = True
+    using_port = True
 
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
-    global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method,separate_attackIP, count_prot)
+    global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method,separate_attackIP, count_prot, using_port)
 
     parameter = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
 
@@ -137,26 +138,47 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         #데이터 불러오기
         folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
 
-        train_port = []
-        test_port = []
+        train_prot = []
+        test_prot = []
         
         # 'train_feature'으로 시작하는 모든 파일 찾기
         train_ffiles_prt = glob.glob(os.path.join(folder, 'train_protflag_*'))
         train_ffiles_prt.sort()
         for file in train_ffiles_prt:
             with open(file, 'rb') as f:
-                train_port += pickle.load(f)
+                train_prot += pickle.load(f)
 
-        train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_port)]
+        train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
     
         test_ffiles_prt = glob.glob(os.path.join(folder, 'test_protflag_*'))
         test_ffiles_prt.sort()
         for file in test_ffiles_prt:
             with open(file, 'rb') as f:
+                test_prot += pickle.load(f)
+
+        test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
+
+    if using_port:
+        folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
+        
+        train_port = []
+        test_port = []
+        
+        train_ffiles_port = glob.glob(os.path.join(folder, 'train_wellport_*'))
+        train_ffiles_port.sort()
+        for file in train_ffiles_port:
+            with open(file, 'rb') as f:
+                train_port += pickle.load(f)
+
+        train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_port)]
+
+        test_ffiles_port = glob.glob(os.path.join(folder, 'test_protflag_*'))
+        test_ffiles_port.sort()
+        for file in test_ffiles_port:
+            with open(file, 'rb') as f:
                 test_port += pickle.load(f)
 
         test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_port)]
-
     
     with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_train_data.pkl", 'wb') as f:
         pickle.dump(train_data,f)
@@ -184,7 +206,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
     # evaluate
     print("평가 시작")
-    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-sep({seperate})-test({test_method}).csv"
+    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-sep({seperate})-test({test_method})_nowhitelist.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     evaluate(train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set,\
              test_multi_dict, test_single_dict, test_label, save_file)
@@ -199,7 +221,7 @@ if __name__ == "__main__":
                     try:
                         for change_feature in [False]:
                             try:
-                                for count_prot in [True, False]:
+                                for count_prot in [True]:
                                     try:
                                         for seperate in [False]:
                                             try:
