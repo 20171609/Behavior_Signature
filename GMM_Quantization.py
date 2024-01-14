@@ -262,28 +262,16 @@ def make_gmm(train_raw, train_key, n_components, dp, dataset_path):
     if global_.attack == 1:
         for idx, key in enumerate(train_key):
             if key.split('+')[0].upper() != "BENIGN":
-                if not global_.seperate:
-                    if len(key.split('+')[1].split('_')) == 3:
-                        train_attack.append(train_raw[idx])
-                else:
-                     train_attack.append(train_raw[idx])
+                    train_attack.append(train_raw[idx])
 
     elif global_.attack == 2:
         for idx, key in enumerate(train_key):
-            if not global_.seperate:
-                if len(key.split('+')[1].split('_')) == 3:
-                    train_attack.append(train_raw[idx])
-            else:
                 train_attack.append(train_raw[idx])
     
     elif global_.attack == 0:
         for idx, key in enumerate(train_key):
             if key.split('+')[0].upper() == "BENIGN":
-                if not global_.seperate:
-                    if len(key.split('+')[1].split('_')) == 3:
-                        train_attack.append(train_raw[idx])
-                else:
-                     train_attack.append(train_raw[idx])
+                train_attack.append(train_raw[idx])
 
     pattern_gmm = GMM_Pattering(ignore_idx=[0, 1, 2], random_seed=43, n_components=n_components,\
                                 max_iter=4000, n_jobs=6)
