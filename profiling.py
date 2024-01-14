@@ -3,7 +3,7 @@ import global_
 from tqdm.auto import tqdm
 import pickle
 import os
-from collections import Counter
+from collections import Counter, deque
 
 class Profile:
 
@@ -147,7 +147,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         check_star = True
                         target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:
-                        flow_stack[target_ip] = {'flow':[], 'label':[],  'srcflag' : [], 'protCount' : [], 'srcPort' : [], 'dstPort' : []}
+                        flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([]), 'srcPort' : deque([]), 'dstPort' : deque([])}
                         flow_stack[target_ip]['st_time'] = now_time
 
                     if "*" in target_ip.split('_')[0]:
@@ -203,7 +203,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                         #if not global_.change_src:
                         profile_srcflag.append(sum(flow_stack[target_ip]['srcflag']))
-                        flow_stack[target_ip]['srcflag'].pop(0)
+                        flow_stack[target_ip]['srcflag'].popleft()
                         
                         #if global_.count_prot:
                         count_tmp = [0, 0, 0] # tcp, udp, icmp
@@ -219,16 +219,16 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                                 count_tmp[2] += 1
 
                         profile_protflag.append(count_tmp)
-                        flow_stack[target_ip]['protCount'].pop(0)
+                        flow_stack[target_ip]['protCount'].popleft()
 
                         port_tmp = [sum(flow_stack[target_ip]['srcPort']), sum(flow_stack[target_ip]['dstPort'])]
                         profile_port.append(port_tmp)
                         
-                        flow_stack[target_ip]['flow'].pop(0)
-                        flow_stack[target_ip]['label'].pop(0)
+                        flow_stack[target_ip]['flow'].popleft()
+                        flow_stack[target_ip]['label'].popleft()
 
-                        flow_stack[target_ip]['srcPort'].pop(0)
-                        flow_stack[target_ip]['dstPort'].pop(0)
+                        flow_stack[target_ip]['srcPort'].popleft()
+                        flow_stack[target_ip]['dstPort'].popleft()
                         
                         flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])
 
