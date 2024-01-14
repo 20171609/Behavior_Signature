@@ -102,7 +102,7 @@ def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_
         test_key_list = test_multi_dict.keys()
 
         for ip in tqdm(test_key_list):
-            max_sim = (0, 0, 0)
+            max_sim = 0
             max_ip = 0
             relevant_indices = set()
 
