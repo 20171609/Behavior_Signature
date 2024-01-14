@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, seperate, change_src, test_method, confidence, separate_attackIP, count_prot, using_port):
+def main(dataset_path, attack, change_feature, change_src, test_method, confidence, separate_attackIP, count_prot, using_port):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -29,12 +29,11 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     # test할 때 사용
     # seperate = True (얜 GMM도)
     # test_method = True
-    using_port = True
 
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
-    global_.initialize(train_path[0], change_src, change_feature, seperate, attack, test_method,separate_attackIP, count_prot, using_port)
+    global_.initialize(train_path[0], change_src, change_feature, attack, test_method,separate_attackIP, count_prot, using_port)
 
     parameter = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
 
@@ -96,7 +95,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
     # GMM 이름
-    dp_GMM = f"cs({change_src})_cf({change_feature})_n({n_components})_atk({attack})_conf({confidence})_sep({seperate})_sepIP({separate_attackIP})_GMM.pkl"
+    dp_GMM = f"cs({change_src})_cf({change_feature})_n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_GMM.pkl"
 
     # GMM 생성 부분
     if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}"):
@@ -110,6 +109,12 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     # ip별 퀀타이제이션 셋 만들기
     train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
     test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
+
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_train_data_attack{attack}_pure.pkl", 'wb') as f:
+        pickle.dump(train_data,f)
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_test_data_attack{attack}_pure.pkl", 'wb') as f:
+        pickle.dump(test_data,f)
+
 
     if not change_src:
         #데이터 불러오기
@@ -172,7 +177,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
         train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_port)]
 
-        test_ffiles_port = glob.glob(os.path.join(folder, 'test_protflag_*'))
+        test_ffiles_port = glob.glob(os.path.join(folder, 'train_wellport_*'))
         test_ffiles_port.sort()
         for file in test_ffiles_port:
             with open(file, 'rb') as f:
@@ -180,9 +185,9 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
         test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_port)]
     
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_train_data.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_test_data.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_test_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_data,f)
 
     train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set\
@@ -191,11 +196,11 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
     test_multi_dict, test_single_dict, test_label, _, _\
           = make_quantization_dict(test_data, test_key)
 
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_train_multi_dict.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_test_multi_dict.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_test_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_multi_dict,f)
-    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_attack_quantization_multi_set.pkl", 'wb') as f:
+    with open(f"./preprocessing/{dataset_path}/{dataset_path}_{parameter}_{count_prot}_{using_port}_attack_quantization_multi_set_attack{attack}.pkl", 'wb') as f:
         pickle.dump(attack_quantization_multi_set,f)
 
     if not os.path.isdir(f'./result'):
@@ -206,7 +211,7 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
     # evaluate
     print("평가 시작")
-    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-sep({seperate})-test({test_method})_nowhitelist.csv"
+    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-test({test_method})_nowhitelist.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     evaluate(train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set,\
              test_multi_dict, test_single_dict, test_label, save_file)
@@ -215,37 +220,27 @@ def main(dataset_path, attack, change_feature, seperate, change_src, test_method
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Rbot','CTU-Neris']:
+        for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
             try:
-                for attack in [0, 1]: # 0이 정상 1이 공격 2가 혼합
+                for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                     try:
                         for change_feature in [False]:
                             try:
-                                for count_prot in [True]:
+                                for count_prot in [False]:
                                     try:
-                                        for seperate in [False]:
+                                        for seperate_attackIP in [True]:
                                             try:
-                                                for seperate_attackIP in [True]:
+                                                for change_src in [True]:
                                                     try:
-                                                        for change_src in [True]:
+                                                        for test_method in [True]: # true가 membership check
                                                             try:
-                                                                for test_method in [True]: # true가 membership check
-                                                                    try:
-                                                                        for confidence in [1.28]:
-                                                                            main(data, attack, change_feature, seperate, change_src, test_method, confidence, seperate_attackIP, count_prot)
+                                                                for confidence in [1.28]:
+                                                                    main(data, attack, change_feature, change_src, test_method, confidence, seperate_attackIP, count_prot, True)
 
-                                                                    except:
-                                                                        error_info = traceback.format_exc()
-                                                                        with open('log.txt', 'a') as f:
-                                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
-                                                                            now = datetime.now()
-                                                                            f.write(f"time: {now}\n")
-                                                                            f.write(f"{error_info}\n\n")
-                                                                        continue
                                                             except:
                                                                 error_info = traceback.format_exc()
                                                                 with open('log.txt', 'a') as f:
-                                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                                                     now = datetime.now()
                                                                     f.write(f"time: {now}\n")
                                                                     f.write(f"{error_info}\n\n")
@@ -253,7 +248,7 @@ if __name__ == "__main__":
                                                     except:
                                                         error_info = traceback.format_exc()
                                                         with open('log.txt', 'a') as f:
-                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                                             now = datetime.now()
                                                             f.write(f"time: {now}\n")
                                                             f.write(f"{error_info}\n\n")
@@ -261,7 +256,7 @@ if __name__ == "__main__":
                                             except:
                                                 error_info = traceback.format_exc()
                                                 with open('log.txt', 'a') as f:
-                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                                     now = datetime.now()
                                                     f.write(f"time: {now}\n")
                                                     f.write(f"{error_info}\n\n")
@@ -269,7 +264,7 @@ if __name__ == "__main__":
                                     except:
                                         error_info = traceback.format_exc()
                                         with open('log.txt', 'a') as f:
-                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                             now = datetime.now()
                                             f.write(f"time: {now}\n")
                                             f.write(f"{error_info}\n\n")
@@ -277,7 +272,7 @@ if __name__ == "__main__":
                             except:
                                 error_info = traceback.format_exc()
                                 with open('log.txt', 'a') as f:
-                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                     now = datetime.now()
                                     f.write(f"time: {now}\n")
                                     f.write(f"{error_info}\n\n")
@@ -285,7 +280,7 @@ if __name__ == "__main__":
                     except:
                         error_info = traceback.format_exc()
                         with open('log.txt', 'a') as f:
-                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                             now = datetime.now()
                             f.write(f"time: {now}\n")
                             f.write(f"{error_info}\n\n")
@@ -293,7 +288,7 @@ if __name__ == "__main__":
             except:
                 error_info = traceback.format_exc()
                 with open('log.txt', 'a') as f:
-                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                     now = datetime.now()
                     f.write(f"time: {now}\n")
                     f.write(f"{error_info}\n\n")
@@ -301,7 +296,7 @@ if __name__ == "__main__":
     except:
         error_info = traceback.format_exc()
         with open('log.txt', 'a') as f:
-            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{seperate} sep-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
             now = datetime.now()
             f.write(f"time: {now}\n")
             f.write(f"{error_info}\n\n")   

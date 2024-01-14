@@ -136,13 +136,11 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                 if flow[column_index['dst_port']] == '':
                     flow[column_index['dst_port']] = "-1"
-                
+
                 sip, dip = flow[column_index['source']], flow[column_index['destination']]
                 now_time = get_int_time(flow[column_index['first']])
-
-                ip_set_list = [sip, dip, f"{sip}_{dip}", f"{dip}_{sip}"] if global_.seperate else [sip, dip]
                 
-                for target_ip in ip_set_list:
+                for target_ip in [sip, dip]:
                     check_star = False
                     
                     if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
@@ -167,12 +165,12 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                     #if global_.count_prot:
                     flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
-
+                    
                     src_port = int_prot(flow[column_index['src_port']])
                     dst_port = int_prot(flow[column_index['dst_port']])
                     #if global_.usingPort:
                     if global_.separate_attackIP:
-                        
+
                         if target_ip == sip:
                             flow_stack[target_ip]['srcPort'].append(0 if src_port <= 1024 else 1)
                             flow_stack[target_ip]['dstPort'].append(0 if dst_port <= 1024 else 1)
