@@ -28,21 +28,17 @@ def initialize(path, change_src_, change_feature_, attack_, test_method_,separat
     separate_attackIP = separate_attackIP_
     attribute_map = {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 'opposite_port': 'dst_port',
                 'duration': 'duration', 'target_pkts': 'out_pkts', 'opposite_pkts': 'in_pkts',
-                'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
-                'start_time' : 'first', 'end_time' : 'last'} if change_src \
+                'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes'} if change_src \
                  else {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 
                    'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'out_pkts', 
-                   'opposite_pkts': 'in_pkts', 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
-                    'start_time' : 'first', 'end_time' : 'last'}
+                   'opposite_pkts': 'in_pkts', 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes'}
 
     attribute_map_inv = {'target_ip': 'destination', 'target_port': 'dst_port', 'opposite_ip': 'source', 
                         'opposite_port': 'src_port', 'duration': 'duration', 'target_pkts': 'in_pkts', 
-                        'opposite_pkts': 'out_pkts', 'target_bytes': 'in_bytes', 'opposite_bytes': 'out_bytes',
-                        'start_time' : 'first', 'end_time' : 'last'} if change_src else\
+                        'opposite_pkts': 'out_pkts', 'target_bytes': 'in_bytes', 'opposite_bytes': 'out_bytes'} if change_src else\
                     {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 
                    'opposite_port': 'dst_port', 'duration': 'duration', 'target_pkts': 'out_pkts', 
-                   'opposite_pkts': 'in_pkts', 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes',
-                    'start_time' : 'first', 'end_time' : 'last'}
+                   'opposite_pkts': 'in_pkts', 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes'}
 
     feature_func_map = {
         'card_target_port':

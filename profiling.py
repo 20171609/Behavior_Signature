@@ -8,8 +8,7 @@ from collections import Counter, deque
 class Profile:
 
     attr_list = ['target_ip', 'target_port', 'opposite_ip', 'opposite_port', 'duration',
-                 'target_pkts', 'opposite_pkts', 'target_bytes', 'opposite_bytes',
-                'start_time', 'end_time']
+                 'target_pkts', 'opposite_pkts', 'target_bytes', 'opposite_bytes']
 
     attr_typing_map = {
         'target_ip': lambda x: str(x),
@@ -21,8 +20,6 @@ class Profile:
         'opposite_pkts': lambda x: int(float(x)),
         'target_bytes': lambda x: int(float(x)),
         'opposite_bytes': lambda x: int(float(x)),
-        'start_time' : lambda x: str(x),
-        'end_time' : lambda x: str(x)
     }
 
     def __init__(self, profile_key):
@@ -70,8 +67,8 @@ class Profile:
         return self.profile_key.split('_')[0]
     
 
-def profiling(flow_list, target_ip, st_time, end_time):
-    profile_key = '{}_{}_{}'.format(target_ip, get_str_time(st_time), get_str_time(end_time))
+def profiling(flow_list, target_ip):
+    profile_key = target_ip
     new_pf = Profile(profile_key)
     for flow in flow_list:
         new_pf.add(add_flow(flow, target_ip))
@@ -96,8 +93,6 @@ def add_flow(flow: list, target_ip):
 
 ## Behavior Profiling
 def b_profiling(data_path, t, parameter, min_data, dataset_path):
-    
-
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
@@ -128,8 +123,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                 flow = tmp_flow.strip().split(',')
                 if flow[0] == '':
                     continue
-
-                flow[column_index['first']] = flow[column_index['first']].split('.')[0].replace('/','-')
                     
                 if flow[column_index['src_port']] == '':
                     flow[column_index['src_port']] = "-1"
@@ -138,7 +131,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                     flow[column_index['dst_port']] = "-1"
 
                 sip, dip = flow[column_index['source']], flow[column_index['destination']]
-                now_time = get_int_time(flow[column_index['first']])
                 
                 for target_ip in [sip, dip]:
                     check_star = False
@@ -148,7 +140,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:
                         flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([]), 'srcPort' : deque([]), 'dstPort' : deque([])}
-                        flow_stack[target_ip]['st_time'] = now_time
 
                     if "*" in target_ip.split('_')[0]:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
@@ -177,7 +168,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         else:
                             flow_stack[target_ip]['srcPort'].append(0 if dst_port <= 1024 else 1)
                             flow_stack[target_ip]['dstPort'].append(0 if src_port <= 1024 else 1)
-                    
+
                     else:
                         check_ip = target_ip.replace("*", "")
                         if check_ip == sip:
@@ -188,10 +179,9 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                             flow_stack[target_ip]['dstPort'].append(0 if src_port <= 1024 else 1)
 
                     flow_stack[target_ip]['flow'].append(flow)
-                    flow_stack[target_ip]['end_time'] = now_time
 
                     if len(flow_stack[target_ip]['flow']) == min_data:
-                        profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip, flow_stack[target_ip]['st_time'], flow_stack[target_ip]['end_time'])
+                        profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip)
 
                         tmp = []
 
@@ -229,8 +219,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                         flow_stack[target_ip]['srcPort'].popleft()
                         flow_stack[target_ip]['dstPort'].popleft()
-                        
-                        flow_stack[target_ip]['st_time'] = get_int_time(flow_stack[target_ip]['flow'][0][column_index['first']])
 
 
 

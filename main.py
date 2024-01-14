@@ -222,7 +222,7 @@ def main(dataset_path, attack, change_feature, change_src, test_method, confiden
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Virut']:
+        for data in ['CTU-Neris']:
             try:
                 for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                     try:
