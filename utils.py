@@ -36,11 +36,7 @@ def check_flow_label(label):
 
 def make_quantization_dict(train_data, train_key):
     train_label = {}
-
-    train_single_dict = {}
     train_multi_dict = {}
-
-    attack_quantization_single_set = set()
     attack_quantization_multi_set = set()
 
     train_multi_dict = {}
@@ -48,19 +44,18 @@ def make_quantization_dict(train_data, train_key):
         label, tmp_key, file = key.split('+')
         target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
 
-        if len(tmp_key.split('_')) == 3:
-            if target_ip not in train_multi_dict:
-                train_multi_dict[target_ip] = set()
-            train_multi_dict[target_ip].add(train_data[idx])
-            if label.upper() != 'BENIGN':
-                attack_quantization_multi_set.add(train_data[idx])
+        if target_ip not in train_multi_dict:
+            train_multi_dict[target_ip] = set()
+        train_multi_dict[target_ip].add(train_data[idx])
+        if label.upper() != 'BENIGN':
+            attack_quantization_multi_set.add(train_data[idx])
 
         if target_ip not in train_label:
             train_label[target_ip] = set()
             
         train_label[target_ip].add(label)
 
-    return train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set
+    return train_multi_dict, train_label, attack_quantization_multi_set
 
 def jaccard(set1, set2):
     intersection = len(set1.intersection(set2))
@@ -82,8 +77,7 @@ def build_inverted_index(pattern_dict):
             inverted_index[word].append(key)
     return inverted_index
 
-def evaluate(train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set,\
-             test_multi_dict, test_single_dict, test_label, save_file):
+def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file):
 
     multi_inverted_index = build_inverted_index(train_multi_dict)
 
@@ -103,7 +97,7 @@ def evaluate(train_multi_dict, train_single_dict, train_label, attack_quantizati
     
     with open(f"{save_file}", "w", newline='', encoding='utf-8') as f:
         wr = csv.writer(f)
-        wr.writerow(["Test IP", "Test IP Label", "Max Sim", "Max IP", "Max IP Label", 'Single Sim', 'Multi Sim'])
+        wr.writerow(["Test IP", "Test IP Label", "Max IP", "Max IP Label", "Max Sim"])
 
         test_key_list = test_multi_dict.keys()
 
@@ -113,64 +107,26 @@ def evaluate(train_multi_dict, train_single_dict, train_label, attack_quantizati
             relevant_indices = set()
 
             if global_.test_method:
-                test_single_filtered_dict = dict()
                 test_multi_filtered_dict = dict()
-
-                if ip in test_single_dict:
-                    test_single_filtered_dict[ip] = test_single_dict[ip].intersection(attack_quantization_single_set)
-                else:
-                    test_single_filtered_dict[ip] = set()
                 test_multi_filtered_dict[ip] = test_multi_dict[ip].intersection(attack_quantization_multi_set)
-                if ip in test_single_dict:
-                    for element in test_single_filtered_dict[ip]:
-                        relevant_indices.update(single_inverted_index[element])
+
                 if ip in test_multi_dict:
                     for element in test_multi_filtered_dict[ip]:
                         relevant_indices.update(multi_inverted_index[element])
                         
                 for train_ip in relevant_indices:
-                    if check_train_label(train_ip) == 'BENIGN':
+                    if check_train_label(train_ip) == 'BENIGN': # white List를 사용하지 않아서 발생함.
                         continue
 
-                    if train_ip in train_single_dict and ip in test_single_dict:
-                        single_sim = jaccard(train_single_dict[train_ip], test_single_dict[ip])
-                    else:
-                        single_sim = 0
                     if train_ip in train_multi_dict and ip in test_multi_dict:
                         multi_sim = jaccard(train_multi_dict[train_ip], test_multi_dict[ip])
                     else:
                         multi_sim = 0
-                    tmp_sim = single_sim * 0.5 + multi_sim * 0.5
-                    if tmp_sim > max_sim[0]:
-                        max_sim = (tmp_sim, single_sim, multi_sim)
+                    tmp_sim =  multi_sim 
+                    if tmp_sim > max_sim:
+                        max_sim = tmp_sim
                         max_ip = train_ip
                 if max_ip == 0:
                     wr.writerow([ip, check_test_label(ip), '-', '-' , '-', '-', '-'])
                 else:
-                    wr.writerow([ip, check_test_label(ip), max_sim[0], max_ip, check_train_label(max_ip), max_sim[1], max_sim[2]])
-
-            else:
-                if ip in test_single_dict:
-                    for element in test_single_dict[ip]:
-                        relevant_indices.update(single_inverted_index[element])
-                if ip in test_multi_dict:
-                    for element in test_multi_dict[ip]:
-                        relevant_indices.update(multi_inverted_index[element])
-                        
-                for train_ip in relevant_indices:               
-                    if train_ip in train_single_dict and ip in test_single_dict:
-                        single_sim = jaccard(train_single_dict[train_ip], test_single_dict[ip])
-                    else:
-                        single_sim = 0
-                    if train_ip in train_multi_dict and ip in test_multi_dict:
-                        multi_sim = jaccard(train_multi_dict[train_ip], test_multi_dict[ip])
-                    else:
-                        multi_sim = 0
-                    tmp_sim = single_sim * 0.5 + multi_sim * 0.5
-                    if tmp_sim > max_sim[0]:
-                        max_sim = (tmp_sim, single_sim, multi_sim)
-                        max_ip = train_ip
-                if max_ip == 0:
-                    wr.writerow([ip, check_test_label(ip), '-', '-' , '-', '-', '-'])
-                else:
-                    wr.writerow([ip, check_test_label(ip), max_sim[0], max_ip, check_train_label(max_ip), max_sim[1], max_sim[2]])
+                    wr.writerow([ip, check_test_label(ip), max_ip, check_train_label(max_ip), max_sim])

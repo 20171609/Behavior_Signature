@@ -190,22 +190,20 @@ def main(dataset_path, attack, change_feature, change_src, test_method, confiden
     if not os.path.isdir(f'./debug_data/{dataset_path}/{parameter}'):
         os.mkdir(f'./debug_data/{dataset_path}/{parameter}')
     
-    with open(f"./preprocessing/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
+    with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
-    with open(f"./preprocessing/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
+    with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_data,f)
 
-    train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set\
-          = make_quantization_dict(train_data, train_key)
+    train_multi_dict, train_label, attack_quantization_multi_set = make_quantization_dict(train_data, train_key)
 
-    test_multi_dict, test_single_dict, test_label, _, _\
-          = make_quantization_dict(test_data, test_key)
+    test_multi_dict, test_label, _ = make_quantization_dict(test_data, test_key)
 
-    with open(f"./preprocessing/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
+    with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
-    with open(f"./preprocessing/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
+    with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_multi_dict,f)
-    with open(f"./preprocessing/{dataset_path}/{parameter}/attack_quantization_multi_set_attack{attack}.pkl", 'wb') as f:
+    with open(f"./debug_data/{dataset_path}/{parameter}/attack_quantization_multi_set_attack{attack}.pkl", 'wb') as f:
         pickle.dump(attack_quantization_multi_set,f)
 
     if not os.path.isdir(f'./result'):
@@ -218,14 +216,13 @@ def main(dataset_path, attack, change_feature, change_src, test_method, confiden
     print("평가 시작")
     file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-test({test_method})_nowhitelist.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
-    evaluate(train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set,\
-             test_multi_dict, test_single_dict, test_label, save_file)
+    evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file)
 
     #score 측정
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
+        for data in ['CTU-Virut']:
             try:
                 for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                     try:
@@ -240,7 +237,7 @@ if __name__ == "__main__":
                                                         for test_method in [True]: # true가 membership check
                                                             try:
                                                                 for confidence in [1.28]:
-                                                                    main(data, attack, change_feature, change_src, test_method, confidence, seperate_attackIP, count_prot, False)
+                                                                    main(data, attack, change_feature, change_src, test_method, confidence, seperate_attackIP, count_prot, False) # 마지막 False는 port 사용
 
                                                             except:
                                                                 error_info = traceback.format_exc()
