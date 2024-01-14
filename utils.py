@@ -6,6 +6,9 @@ from itertools import combinations
 import csv
 import global_
 
+def int_prot(x):
+    return int(x, 16) if x.startswith('0x') else int(float(x))
+
 def get_int_time(start_time: str):
     datetime_format = '%Y-%m-%d %H:%M:%S'
     ts_timestamp = datetime.strptime(start_time, datetime_format).timestamp()
@@ -40,50 +43,22 @@ def make_quantization_dict(train_data, train_key):
     attack_quantization_single_set = set()
     attack_quantization_multi_set = set()
 
-    if global_.seperate:
-        
-        for idx, key in enumerate(tqdm(train_key)):
-            label, tmp_key, file = key.split('+')
-            target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
+    train_multi_dict = {}
+    for idx, key in enumerate(tqdm(train_key)):
+        label, tmp_key, file = key.split('+')
+        target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
 
-            if len(tmp_key.split('_')) == 4:
-                if target_ip not in train_single_dict:
-                    train_single_dict[target_ip] = set()
-                
-                train_single_dict[target_ip].add(train_data[idx])
-                
-                if label.upper() != 'BENIGN':
-                    attack_quantization_single_set.add(train_data[idx])
+        if len(tmp_key.split('_')) == 3:
+            if target_ip not in train_multi_dict:
+                train_multi_dict[target_ip] = set()
+            train_multi_dict[target_ip].add(train_data[idx])
+            if label.upper() != 'BENIGN':
+                attack_quantization_multi_set.add(train_data[idx])
 
-                
-            elif len(tmp_key.split('_')) == 3:
-                if target_ip not in train_multi_dict:
-                    train_multi_dict[target_ip] = set()
-                train_multi_dict[target_ip].add(train_data[idx])
-                if label.upper() != 'BENIGN':
-                    attack_quantization_multi_set.add(train_data[idx])
-                    
-            if target_ip not in train_label:
-                train_label[target_ip] = set()
-                
-            train_label[target_ip].add(label)
-    else:
-        train_multi_dict = {}
-        for idx, key in enumerate(tqdm(train_key)):
-            label, tmp_key, file = key.split('+')
-            target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
-
-            if len(tmp_key.split('_')) == 3:
-                if target_ip not in train_multi_dict:
-                    train_multi_dict[target_ip] = set()
-                train_multi_dict[target_ip].add(train_data[idx])
-                if label.upper() != 'BENIGN':
-                    attack_quantization_multi_set.add(train_data[idx])
-
-            if target_ip not in train_label:
-                train_label[target_ip] = set()
-                
-            train_label[target_ip].add(label)
+        if target_ip not in train_label:
+            train_label[target_ip] = set()
+            
+        train_label[target_ip].add(label)
 
     return train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set
 
@@ -110,11 +85,7 @@ def build_inverted_index(pattern_dict):
 def evaluate(train_multi_dict, train_single_dict, train_label, attack_quantization_multi_set, attack_quantization_single_set,\
              test_multi_dict, test_single_dict, test_label, save_file):
 
-    if global_.seperate:
-        single_inverted_index = build_inverted_index(train_single_dict)
-        multi_inverted_index = build_inverted_index(train_multi_dict)
-    else:
-        multi_inverted_index = build_inverted_index(train_multi_dict)
+    multi_inverted_index = build_inverted_index(train_multi_dict)
 
     def check_train_label(i):
         for label in train_label[i]:
@@ -158,8 +129,8 @@ def evaluate(train_multi_dict, train_single_dict, train_label, attack_quantizati
                         relevant_indices.update(multi_inverted_index[element])
                         
                 for train_ip in relevant_indices:
-                    # if check_train_label(train_ip) == 'BENIGN':
-                    #     continue
+                    if check_train_label(train_ip) == 'BENIGN':
+                        continue
 
                     if train_ip in train_single_dict and ip in test_single_dict:
                         single_sim = jaccard(train_single_dict[train_ip], test_single_dict[ip])
