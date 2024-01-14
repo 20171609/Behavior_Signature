@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, change_src, test_method, confidence, separate_attackIP, count_prot, using_port):
+def main(dataset_path, attack, change_feature, change_src,confidence, separate_attackIP, count_prot, using_port,window):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -28,12 +28,12 @@ def main(dataset_path, attack, change_feature, change_src, test_method, confiden
 
     # test할 때 사용
     # seperate = True (얜 GMM도)
-    # test_method = True
 
+    
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
-    global_.initialize(train_path[0], change_src, change_feature, attack, test_method,separate_attackIP, count_prot, using_port)
+    global_.initialize(train_path[0], change_src, change_feature, attack, separate_attackIP, count_prot, using_port,window)
 
     parameter = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
 
@@ -105,104 +105,111 @@ def main(dataset_path, attack, change_feature, change_src, test_method, confiden
     print(f"{n_components}n {attack}attack GMM 불러옴")
     with open(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}", 'rb') as f:
         pattern_gmm = pickle.load(f)
+   
+   
+    parameter += f'_up({using_port})_pro({count_prot})'
     
     # ip별 퀀타이제이션 셋 만들기
-    train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
-    test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
+    if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
+        with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'rb') as f:
+            train_data = pickle.load(f)
+            
+        with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
+            test_data = pickle.load(f)
+    else:
+        train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
+        test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
-    if not change_src:
-        #데이터 불러오기
-        folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
+        if not change_src:
+            #데이터 불러오기
+            folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
 
-        train_src = []
-        test_src = []
-        # 'train_feature'으로 시작하는 모든 파일 찾기
-        train_ffiles_src = glob.glob(os.path.join(folder, 'train_srcflag*'))
-        train_ffiles_src.sort()
-        for file in train_ffiles_src:
-            with open(file, 'rb') as f:
-                train_src += pickle.load(f)
+            train_src = []
+            test_src = []
+            # 'train_feature'으로 시작하는 모든 파일 찾기
+            train_ffiles_src = glob.glob(os.path.join(folder, 'train_srcflag*'))
+            train_ffiles_src.sort()
+            for file in train_ffiles_src:
+                with open(file, 'rb') as f:
+                    train_src += pickle.load(f)
 
-        train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
-    
-        test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
-        test_ffiles_src.sort()
-        for file in test_ffiles_src:
-            with open(file, 'rb') as f:
-                test_src += pickle.load(f)
-
-        test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
-
-    if count_prot:
-        #데이터 불러오기
-        folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
-
-        train_prot = []
-        test_prot = []
+            train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
         
-        # 'train_feature'으로 시작하는 모든 파일 찾기
-        train_ffiles_prt = glob.glob(os.path.join(folder, 'train_protflag_*'))
-        train_ffiles_prt.sort()
-        for file in train_ffiles_prt:
-            with open(file, 'rb') as f:
-                train_prot += pickle.load(f)
+            test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
+            test_ffiles_src.sort()
+            for file in test_ffiles_src:
+                with open(file, 'rb') as f:
+                    test_src += pickle.load(f)
 
-        train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
-    
-        test_ffiles_prt = glob.glob(os.path.join(folder, 'test_protflag_*'))
-        test_ffiles_prt.sort()
-        for file in test_ffiles_prt:
-            with open(file, 'rb') as f:
-                test_prot += pickle.load(f)
+            test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
 
-        test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
+        if count_prot:
+            #데이터 불러오기
+            folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
 
-    if using_port:
-        folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
+            train_prot = []
+            test_prot = []
+            
+            # 'train_feature'으로 시작하는 모든 파일 찾기
+            train_ffiles_prt = glob.glob(os.path.join(folder, 'train_protflag_*'))
+            train_ffiles_prt.sort()
+            for file in train_ffiles_prt:
+                with open(file, 'rb') as f:
+                    train_prot += pickle.load(f)
+
+            train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
         
-        train_port = []
-        test_port = []
-        
-        train_ffiles_port = glob.glob(os.path.join(folder, 'train_wellport_*'))
-        train_ffiles_port.sort()
-        for file in train_ffiles_port:
-            with open(file, 'rb') as f:
-                train_port += pickle.load(f)
+            test_ffiles_prt = glob.glob(os.path.join(folder, 'test_protflag_*'))
+            test_ffiles_prt.sort()
+            for file in test_ffiles_prt:
+                with open(file, 'rb') as f:
+                    test_prot += pickle.load(f)
 
-        train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_port)]
+            test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
 
-        test_ffiles_port = glob.glob(os.path.join(folder, 'train_wellport_*'))
-        test_ffiles_port.sort()
-        for file in test_ffiles_port:
-            with open(file, 'rb') as f:
-                test_port += pickle.load(f)
+        if using_port:
+            folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
+            
+            train_port = []
+            test_port = []
+            
+            train_ffiles_port = glob.glob(os.path.join(folder, 'train_wellport_*'))
+            train_ffiles_port.sort()
+            for file in train_ffiles_port:
+                with open(file, 'rb') as f:
+                    train_port += pickle.load(f)
 
-        test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_port)]
+            train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_port)]
 
-    parameter += f'_up({using_port})_pro({count_prot})'
+            test_ffiles_port = glob.glob(os.path.join(folder, 'train_wellport_*'))
+            test_ffiles_port.sort()
+            for file in test_ffiles_port:
+                with open(file, 'rb') as f:
+                    test_port += pickle.load(f)
 
-    if not os.path.isdir(f"./debug_data"):
-        os.mkdir(f"./debug_data")
+            test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_port)]
 
-    if not os.path.isdir(f"./debug_data/{dataset_path}"):
-        os.mkdir(f"./debug_data/{dataset_path}")
-
-    if not os.path.isdir(f'./debug_data/{dataset_path}/{parameter}'):
-        os.mkdir(f'./debug_data/{dataset_path}/{parameter}')
     
-    with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(train_data,f)
-    with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(test_data,f)
+
+        if not os.path.isdir(f"./debug_data"):
+            os.mkdir(f"./debug_data")
+
+        if not os.path.isdir(f"./debug_data/{dataset_path}"):
+            os.mkdir(f"./debug_data/{dataset_path}")
+
+        if not os.path.isdir(f'./debug_data/{dataset_path}/{parameter}'):
+            os.mkdir(f'./debug_data/{dataset_path}/{parameter}')
+        
+        with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
+            pickle.dump(train_data,f)
+        with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
+            pickle.dump(test_data,f)
 
     train_multi_dict, train_label, attack_quantization_multi_set = make_quantization_dict(train_data, train_key)
 
-    test_multi_dict, test_label, _ = make_quantization_dict(test_data, test_key)
 
     with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
-    with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(test_multi_dict,f)
     with open(f"./debug_data/{dataset_path}/{parameter}/attack_quantization_multi_set_attack{attack}.pkl", 'wb') as f:
         pickle.dump(attack_quantization_multi_set,f)
 
@@ -214,9 +221,10 @@ def main(dataset_path, attack, change_feature, change_src, test_method, confiden
 
     # evaluate
     print("평가 시작")
-    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})-test({test_method})_nowhitelist.csv"
+    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_nowhitelist.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
-    evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file)
+    
+    evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_data, test_key, save_file)
 
     #score 측정
 
@@ -233,32 +241,23 @@ if __name__ == "__main__":
                                         for seperate_attackIP in [True]:
                                             try:
                                                 for change_src in [True]:
-                                                    try:
-                                                        for test_method in [True]: # true가 membership check
-                                                            try:
-                                                                for confidence in [1.28]:
-                                                                    main(data, attack, change_feature, change_src, test_method, confidence, seperate_attackIP, count_prot, False) # 마지막 False는 port 사용
 
-                                                            except:
-                                                                error_info = traceback.format_exc()
-                                                                with open('log.txt', 'a') as f:
-                                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
-                                                                    now = datetime.now()
-                                                                    f.write(f"time: {now}\n")
-                                                                    f.write(f"{error_info}\n\n")
-                                                                continue
+                                                    try:
+                                                        for confidence in [1.28]:
+                                                            main(data, attack, change_feature, change_src, confidence, seperate_attackIP, count_prot, False, 30) # 마지막 False는 port 사용
+
                                                     except:
                                                         error_info = traceback.format_exc()
                                                         with open('log.txt', 'a') as f:
-                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                                             now = datetime.now()
                                                             f.write(f"time: {now}\n")
                                                             f.write(f"{error_info}\n\n")
-                                                        continue
+                                                            continue
                                             except:
                                                 error_info = traceback.format_exc()
                                                 with open('log.txt', 'a') as f:
-                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                                     now = datetime.now()
                                                     f.write(f"time: {now}\n")
                                                     f.write(f"{error_info}\n\n")
@@ -266,7 +265,7 @@ if __name__ == "__main__":
                                     except:
                                         error_info = traceback.format_exc()
                                         with open('log.txt', 'a') as f:
-                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                             now = datetime.now()
                                             f.write(f"time: {now}\n")
                                             f.write(f"{error_info}\n\n")
@@ -274,7 +273,7 @@ if __name__ == "__main__":
                             except:
                                 error_info = traceback.format_exc()
                                 with open('log.txt', 'a') as f:
-                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                                     now = datetime.now()
                                     f.write(f"time: {now}\n")
                                     f.write(f"{error_info}\n\n")
@@ -282,7 +281,7 @@ if __name__ == "__main__":
                     except:
                         error_info = traceback.format_exc()
                         with open('log.txt', 'a') as f:
-                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                             now = datetime.now()
                             f.write(f"time: {now}\n")
                             f.write(f"{error_info}\n\n")
@@ -290,7 +289,7 @@ if __name__ == "__main__":
             except:
                 error_info = traceback.format_exc()
                 with open('log.txt', 'a') as f:
-                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+                    f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
                     now = datetime.now()
                     f.write(f"time: {now}\n")
                     f.write(f"{error_info}\n\n")
@@ -298,7 +297,7 @@ if __name__ == "__main__":
     except:
         error_info = traceback.format_exc()
         with open('log.txt', 'a') as f:
-            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-{test_method} sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{change_src} change_src-sep_attackIP-{seperate_attackIP} test에서 에러 발생\n")
             now = datetime.now()
             f.write(f"time: {now}\n")
             f.write(f"{error_info}\n\n")   

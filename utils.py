@@ -5,7 +5,8 @@ from collections import defaultdict
 from itertools import combinations
 import csv
 import global_
-
+from collections import Counter
+from collections import deque
 def int_prot(x):
     return int(x, 16) if x.startswith('0x') else int(float(x))
 
@@ -38,21 +39,19 @@ def make_quantization_dict(train_data, train_key):
     train_label = {}
     train_multi_dict = {}
     attack_quantization_multi_set = set()
-
-    train_multi_dict = {}
+    
     for idx, key in enumerate(tqdm(train_key)):
         label, tmp_key, file = key.split('+')
         target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
-
-        if target_ip not in train_multi_dict:
-            train_multi_dict[target_ip] = set()
-        train_multi_dict[target_ip].add(train_data[idx])
-        if label.upper() != 'BENIGN':
+        if label != 'BENIGN':
+            if target_ip not in train_multi_dict:
+                train_multi_dict[target_ip] = []
+            train_multi_dict[target_ip].append(train_data[idx])
             attack_quantization_multi_set.add(train_data[idx])
 
         if target_ip not in train_label:
             train_label[target_ip] = set()
-            
+                    
         train_label[target_ip].add(label)
 
     return train_multi_dict, train_label, attack_quantization_multi_set
@@ -77,9 +76,7 @@ def build_inverted_index(pattern_dict):
             inverted_index[word].append(key)
     return inverted_index
 
-def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file):
-
-    multi_inverted_index = build_inverted_index(train_multi_dict)
+def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_data, test_key, save_file):
 
     def check_train_label(i):
         for label in train_label[i]:
@@ -88,45 +85,95 @@ def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_
         
         return 'BENIGN'
     
-    def check_test_label(i):
-        for label in test_label[i]:
-            if label.upper() != 'BENIGN':
-                return label
-        
-        return 'BENIGN'
+    train_counter = dict()
+    for train_ip in train_multi_dict.keys():
+        train_counter[train_ip] = Counter(train_multi_dict[train_ip])
     
+    test_multi_dict = dict()
+    test_label_dict = dict()
+    test_max_sum_dict = dict()
+    test_sum_dict = dict()
+    test_count_dict = dict()
+    test_max_dict = dict()
+    denominator = global_.window
+    
+    for idx,key in tqdm(enumerate(test_key)):
+        
+        label,ip,file = key.split("+")
+        
+        key_ = f'{ip}_{file}'
+        sig = test_data[idx]
+        
+        if key_ not in test_multi_dict: # test window list 생성 
+            test_multi_dict[key_] = deque([])
+            test_count_dict[key_] = dict()
+            test_max_sum_dict[key_] = 0
+            test_sum_dict[key_] = dict()
+            test_max_dict[key_] = 0
+            
+        test_multi_dict[key_].append(sig)
+        
+        if sig not in test_count_dict[key_]: #test count dict 생성 
+            test_count_dict[key_][sig]=0
+        test_count_dict[key_][sig] += 1
+        
+        if key_ not in test_label_dict: #test label dict 생성 
+            test_label_dict[key_] = label
+        elif label.upper()!='BENIGN':
+            test_label_dict[key_]=label
+        
+        if len(test_multi_dict[key_])==global_.window: # case1. 처음 10개 유사도 계산 
+            sig_list = test_multi_dict[key_]
+            
+            for train_ip in train_counter.keys():    
+                sum = 0
+                test_sum_dict[key_]={train_ip:0}
+                
+                for s in set(sig_list):
+                    if s in train_counter[train_ip]:
+                        sum += min(sig_list.count(s),train_counter[train_ip][s])
+                test_sum_dict[key_][train_ip] = sum
+                
+                if  sum > test_max_sum_dict[key_]:
+                    test_max_dict[key_] = train_ip
+                    test_max_sum_dict[key_]= sum
+                    
+        elif len(test_multi_dict[key_])>global_.window:
+            
+            out_ = test_multi_dict[key_].popleft()
+            test_count_dict[key_][out_] -= 1
+            
+            for train_ip in train_counter.keys():
+                if sig in train_counter[train_ip]:
+                    
+                    sum = test_sum_dict[key_][train_ip]
+                    
+                    if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_]< train_counter[train_ip][out_]): # popleft check 
+                        sum -= 1
+                        
+                    if test_count_dict[key_][sig] < train_counter[train_ip][sig]: # append check here debug
+                        sum += 1
+                    
+                    if  sum > test_max_sum_dict[key_]:
+                        test_max_dict[key_] = train_ip
+                        test_max_sum_dict[key_]= sum
+            if test_count_dict[key_][out_] == 0:
+                del test_count_dict[key_][out_]   
+        # if count < 50  :
+        #     print(test_multi_dict[key_])
+        #     print(test_max_dict[key_])
+        #     print(test_sim_dict[key_])
+        #     print(test_count_dict[key_])
+        #     print()
+        #     print()
+        
     with open(f"{save_file}", "w", newline='', encoding='utf-8') as f:
         wr = csv.writer(f)
         wr.writerow(["Test IP", "Test IP Label", "Max IP", "Max IP Label", "Max Sim"])
 
-        test_key_list = test_multi_dict.keys()
-
-        for ip in tqdm(test_key_list):
-            max_sim = 0
-            max_ip = 0
-            relevant_indices = set()
-
-            if global_.test_method:
-                test_multi_filtered_dict = dict()
-                test_multi_filtered_dict[ip] = test_multi_dict[ip].intersection(attack_quantization_multi_set)
-
-                if ip in test_multi_dict:
-                    for element in test_multi_filtered_dict[ip]:
-                        relevant_indices.update(multi_inverted_index[element])
-                        
-                for train_ip in relevant_indices:
-                    if check_train_label(train_ip) == 'BENIGN': # white List를 사용하지 않아서 발생함.
-                        continue
-
-                    if train_ip in train_multi_dict and ip in test_multi_dict:
-                        multi_sim = jaccard(train_multi_dict[train_ip], test_multi_dict[ip])
-                    else:
-                        multi_sim = 0
-                    tmp_sim =  multi_sim 
-                    if tmp_sim > max_sim:
-                        max_sim = tmp_sim
-                        max_ip = train_ip
-                if max_ip == 0:
-                    wr.writerow([ip, check_test_label(ip), '-', '-' , '-', '-', '-'])
-                else:
-                    wr.writerow([ip, check_test_label(ip), max_ip, check_train_label(max_ip), max_sim])
+        for ip in test_multi_dict.keys():
+            max_ip = test_max_dict[ip]
+            if max_ip == 0:
+                wr.writerow([ip, test_label_dict[ip], '-', '-' , '-'])
+            else:
+                wr.writerow([ip, test_label_dict[ip], test_max_dict[ip], check_train_label(max_ip), test_max_sum_dict[ip]/denominator])
