@@ -56,6 +56,19 @@ def make_quantization_dict(train_data, train_key):
 
     return train_multi_dict, train_label, attack_quantization_multi_set
 
+def make_quantization_debug_dict(test_data, test_key):
+    test_multi_dict = {}
+    
+    for idx, key in enumerate(tqdm(test_key)):
+        label, tmp_key, file = key.split('+')
+        target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
+
+        if target_ip not in test_multi_dict:
+            test_multi_dict[target_ip] = set()
+        test_multi_dict[target_ip].add(test_data[idx])
+
+    return test_multi_dict
+
 def jaccard(set1, set2):
     intersection = len(set1.intersection(set2))
     union = len(set1.union(set2))
@@ -85,6 +98,7 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
         
         return 'BENIGN'
     
+
     train_counter = dict()
     for train_ip in train_multi_dict.keys():
         train_counter[train_ip] = Counter(train_multi_dict[train_ip])
@@ -169,6 +183,6 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
         for ip in test_multi_dict.keys():
             max_ip = test_max_dict[ip]
             if max_ip == 0:
-                wr.writerow([ip, test_label_dict[ip], '-', '-' , '-'])
+                wr.writerow([test_label_dict[ip] + '_' + ip, test_label_dict[ip], '-', '-' , '-'])
             else:
-                wr.writerow([ip, test_label_dict[ip], max_ip, check_train_label(max_ip), test_max_sum_dict[ip]/denominator])
+                wr.writerow([test_label_dict[ip] + '_' + ip, test_label_dict[ip], max_ip, check_train_label(max_ip), test_max_sum_dict[ip]/denominator])

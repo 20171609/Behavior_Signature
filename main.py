@@ -206,10 +206,12 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
             pickle.dump(test_data,f)
 
     train_multi_dict, train_label, attack_quantization_multi_set = make_quantization_dict(train_data, train_key)
-
+    test_multi_dict = make_quantization_debug_dict(test_data, test_key)
 
     with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
+    with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
+        pickle.dump(test_multi_dict,f)
     with open(f"./debug_data/{dataset_path}/{parameter}/attack_quantization_multi_set_attack{attack}.pkl", 'wb') as f:
         pickle.dump(attack_quantization_multi_set,f)
 
@@ -230,7 +232,7 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Neris']:
+        for data in ['CTU-Neris', 'CTU-Rbot', 'CTU-Virut']:
             try:
                 for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                     try:
