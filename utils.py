@@ -126,18 +126,18 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
             sig_list = test_multi_dict[key_]
             
             for train_ip in train_counter.keys():    
-                sum = 0
+                sum_ = 0
                 if train_ip not in test_sum_dict[key_]:
                     test_sum_dict[key_][train_ip]=0
                 
                 for s in set(sig_list):
                     if s in train_counter[train_ip]:
-                        sum += min(sig_list.count(s),train_counter[train_ip][s])
-                test_sum_dict[key_][train_ip] = sum
+                        sum_ += min(sig_list.count(s),train_counter[train_ip][s])
+                test_sum_dict[key_][train_ip] = sum_
                 
-                if  sum > test_max_sum_dict[key_]:
+                if  sum_ > test_max_sum_dict[key_]:
                     test_max_dict[key_] = train_ip
-                    test_max_sum_dict[key_]= sum
+                    test_max_sum_dict[key_]= sum_
                     
         elif len(test_multi_dict[key_])>global_.window:
             
@@ -145,19 +145,19 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
             test_count_dict[key_][out_] -= 1
             
             for train_ip in train_counter.keys():
-                sum = test_sum_dict[key_][train_ip]
+                sum_ = test_sum_dict[key_][train_ip]
                 
-                if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_]< train_counter[train_ip][out_]):
-                    sum -= 1
+                if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_] <= train_counter[train_ip][out_]):
+                    sum_ -= 1
                 if (sig in train_counter[train_ip]) and (test_count_dict[key_][sig] <= train_counter[train_ip][sig]):
-                    sum += 1
+                    sum_ += 1
                     
-                test_sum_dict[key_][train_ip] = sum
+                test_sum_dict[key_][train_ip] = sum_
                     
-                if  sum > test_max_sum_dict[key_]:
+                if  sum_ > test_max_sum_dict[key_]:
                     test_max_dict[key_] = train_ip
-                    test_max_sum_dict[key_]= sum
-                    
+                    test_max_sum_dict[key_]= sum_
+
             if test_count_dict[key_][out_] == 0:
                 del test_count_dict[key_][out_]   
         # if count < 50  :
