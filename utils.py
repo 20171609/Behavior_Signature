@@ -145,22 +145,19 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
             test_count_dict[key_][out_] -= 1
             
             for train_ip in train_counter.keys():
-                if sig in train_counter[train_ip]:
-                    if train_ip not in test_sum_dict[key_]:
-                        test_sum_dict[key_][train_ip]=0
-                    sum = test_sum_dict[key_][train_ip]
+                sum = test_sum_dict[key_][train_ip]
+                
+                if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_]< train_counter[train_ip][out_]):
+                    sum -= 1
+                if (sig in train_counter[train_ip]) and (test_count_dict[key_][sig] <= train_counter[train_ip][sig]):
+                    sum += 1
                     
-                    if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_]< train_counter[train_ip][out_]): # popleft check 
-                        sum -= 1
-                        
-                    if test_count_dict[key_][sig] < train_counter[train_ip][sig]: # append check here debug
-                        sum += 1
+                test_sum_dict[key_][train_ip] = sum
                     
-                    test_sum_dict[key_][train_ip] = sum
+                if  sum > test_max_sum_dict[key_]:
+                    test_max_dict[key_] = train_ip
+                    test_max_sum_dict[key_]= sum
                     
-                    if  sum > test_max_sum_dict[key_]:
-                        test_max_dict[key_] = train_ip
-                        test_max_sum_dict[key_]= sum
             if test_count_dict[key_][out_] == 0:
                 del test_count_dict[key_][out_]   
         # if count < 50  :
