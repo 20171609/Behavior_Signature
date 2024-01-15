@@ -156,6 +156,8 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
                     if test_count_dict[key_][sig] < train_counter[train_ip][sig]: # append check here debug
                         sum += 1
                     
+                    test_sum_dict[key_][train_ip] = sum
+                    
                     if  sum > test_max_sum_dict[key_]:
                         test_max_dict[key_] = train_ip
                         test_max_sum_dict[key_]= sum
