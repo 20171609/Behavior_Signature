@@ -224,7 +224,7 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
     file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_nowhitelist.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
-    evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_data, test_key, save_file)
+    evaluate(train_multi_dict, train_label, test_data, test_key, save_file)
 
     #score 측정
 
@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
                                                     try:
                                                         for confidence in [1.28]:
-                                                            main(data, attack, change_feature, change_src, confidence, seperate_attackIP, count_prot, False, 30) # 마지막 False는 port 사용
+                                                            main(data, attack, change_feature, change_src, confidence, seperate_attackIP, count_prot, False, 10) # 마지막 False는 port 사용
 
                                                     except:
                                                         error_info = traceback.format_exc()

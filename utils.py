@@ -76,7 +76,7 @@ def build_inverted_index(pattern_dict):
             inverted_index[word].append(key)
     return inverted_index
 
-def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_data, test_key, save_file):
+def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
 
     def check_train_label(i):
         for label in train_label[i]:
@@ -127,7 +127,8 @@ def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_
             
             for train_ip in train_counter.keys():    
                 sum = 0
-                test_sum_dict[key_]={train_ip:0}
+                if train_ip not in test_sum_dict[key_]:
+                    test_sum_dict[key_][train_ip]=0
                 
                 for s in set(sig_list):
                     if s in train_counter[train_ip]:
@@ -145,7 +146,8 @@ def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_
             
             for train_ip in train_counter.keys():
                 if sig in train_counter[train_ip]:
-                    
+                    if train_ip not in test_sum_dict[key_]:
+                        test_sum_dict[key_][train_ip]=0
                     sum = test_sum_dict[key_][train_ip]
                     
                     if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_]< train_counter[train_ip][out_]): # popleft check 
@@ -176,4 +178,4 @@ def evaluate(train_multi_dict, train_label, attack_quantization_multi_set, test_
             if max_ip == 0:
                 wr.writerow([ip, test_label_dict[ip], '-', '-' , '-'])
             else:
-                wr.writerow([ip, test_label_dict[ip], test_max_dict[ip], check_train_label(max_ip), test_max_sum_dict[ip]/denominator])
+                wr.writerow([ip, test_label_dict[ip], max_ip, check_train_label(max_ip), test_max_sum_dict[ip]/denominator])
