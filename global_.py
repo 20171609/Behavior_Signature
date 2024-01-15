@@ -1,6 +1,6 @@
 import numpy as np
 
-def initialize(path, change_src_, change_feature_, attack_, separate_attackIP_, count_prot_, using_port_,window_):
+def initialize(path, change_src_, change_feature_, attack_, separate_attackIP_, count_prot_, using_port_,train_window_,test_window_):
     global column_index
     
     with open(path, 'r', encoding='utf-8') as f:
@@ -17,13 +17,15 @@ def initialize(path, change_src_, change_feature_, attack_, separate_attackIP_, 
     global change_feature
     global count_prot
     global using_port
-    global window
+    global train_window
+    global test_window
 
     change_src = change_src_
     change_feature = change_feature_
     count_prot = count_prot_
     using_port = using_port_
-    window = window_
+    train_window = train_window_
+    test_window = test_window_
 
     
     attack = attack_
@@ -70,3 +72,4 @@ def initialize(path, change_src_, change_feature_, attack_, separate_attackIP_, 
         'std_dur':
             lambda x: np.std(x['duration']) if not change_feature else np.std(x['duration']) + np.mean(x['duration']),
     }
+    
