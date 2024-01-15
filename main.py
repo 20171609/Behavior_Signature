@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, change_src,confidence, separate_attackIP, count_prot, using_port,window):
+def main(dataset_path, attack, change_feature, change_src,confidence, separate_attackIP, count_prot, using_port, train_window, test_window):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -33,7 +33,7 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
-    global_.initialize(train_path[0], change_src, change_feature, attack, separate_attackIP, count_prot, using_port,window)
+    global_.initialize(train_path[0], change_src, change_feature, attack, separate_attackIP, count_prot, using_port,train_window,test_window)
 
     parameter = f"cs({change_src})_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
 
@@ -205,15 +205,17 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
             pickle.dump(test_data,f)
 
-    train_multi_dict, train_label, attack_quantization_multi_set = make_quantization_dict(train_data, train_key)
+    if train_window:
+        train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
+    else:
+        train_multi_dict, train_label = make_quantization_dict(train_data, train_key)
     test_multi_dict = make_quantization_debug_dict(test_data, test_key)
 
     with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
     with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_multi_dict,f)
-    with open(f"./debug_data/{dataset_path}/{parameter}/attack_quantization_multi_set_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(attack_quantization_multi_set,f)
+
 
     if not os.path.isdir(f'./result'):
         os.mkdir(f'./result')
@@ -223,7 +225,7 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
 
     # evaluate
     print("평가 시작")
-    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_nowhitelist.csv"
+    file_name = f"cs({change_src})-cf({change_feature})-prot({count_prot})-port({using_port})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})).csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     evaluate(train_multi_dict, train_label, test_data, test_key, save_file)
@@ -232,7 +234,7 @@ def main(dataset_path, attack, change_feature, change_src,confidence, separate_a
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Neris', 'CTU-Rbot', 'CTU-Virut']:
+        for data in ['CTU-Neris']:
             try:
                 for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                     try:
@@ -246,7 +248,7 @@ if __name__ == "__main__":
 
                                                     try:
                                                         for confidence in [1.28]:
-                                                            main(data, attack, change_feature, change_src, confidence, seperate_attackIP, count_prot, False, 10) # 마지막 False는 port 사용
+                                                            main(data, attack, change_feature, change_src, confidence, seperate_attackIP, count_prot, False, 10,10) # 마지막 False는 port 사용
 
                                                     except:
                                                         error_info = traceback.format_exc()
