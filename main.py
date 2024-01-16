@@ -116,6 +116,8 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
             test_data = pickle.load(f)
     else:
+        parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
+
         train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
         test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
 
@@ -166,6 +168,8 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
             test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
 
+        parameter += f'_pro({count_prot})_as({add_src})_conf({confidence})_n({n_components})'
+
         if not os.path.isdir(f"./debug_data"):
             os.mkdir(f"./debug_data")
 
@@ -179,17 +183,20 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
             pickle.dump(train_data,f)
         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
             pickle.dump(test_data,f)
-
-    if train_window:
-        train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
-    else:
-        train_multi_dict, train_label = make_quantization_dict(train_data, train_key)
+    
+    print(len(train_data))
+    train_multi_dict = make_quantization_debug_dict(train_data, train_key) 
     test_multi_dict = make_quantization_debug_dict(test_data, test_key)
 
     with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
     with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_multi_dict,f)
+
+    if train_window:
+        train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
+    else:
+        train_multi_dict, train_label = make_quantization_dict(train_data, train_key)
 
     if not os.path.isdir(f'./result'):
         os.mkdir(f'./result')
@@ -202,7 +209,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     file_name = f"cs({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})).csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
-    evaluate(train_multi_dict, train_label, test_data, test_key, save_file)
+    evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file)
 
     #score 측정
 
@@ -217,4 +224,6 @@ if __name__ == "__main__":
                                 for n_components in [20, 30]:
                                     if confidence == 10000000 and n_components == 20:
                                         continue
-                                    main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, 10,10, n_components) # 마지막 False는 port 사용
+                                    for train_window in [0]:
+                                        for test_window in [10]:
+                                            main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components) # 마지막 False는 port 사용
