@@ -63,22 +63,24 @@ def make_quantization_dict_window(train_data, train_key, train_window):
             
             if len(train_queue_dict[target_ip]) == train_window:
                 
-                if train_window <= 10:
-                    if train_count_dict[target_ip] not in train_multi_dict[target_ip_idx]:
-                        train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
-                else:
-                    train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
-            elif len(train_queue_dict[target_ip]) > train_window:
-                out_ = train_queue_dict[target_ip].popleft()
-                train_count_dict[target_ip][out_]-=1
-                
-                if train_count_dict[target_ip][out_]==0:
-                    del train_count_dict[target_ip][out_]
-                if data in train_count_dict[target_ip]:
-                    train_count_dict[target_ip][data]+=1
-                else:
-                    train_count_dict[target_ip][data]=1
+                # if train_window <= 10:
+                #     if train_count_dict[target_ip] != train_multi_dict[target_ip_idx]:
+                #         train_multi_dict[target_ip_idx] = train_count_dict[target_ip]
+                # else:
                 train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
+                train_count_dict[target_ip] = dict()
+                train_queue_dict[target_ip] = deque()
+            # elif len(train_queue_dict[target_ip]) > train_window:
+            #     out_ = train_queue_dict[target_ip].popleft()
+            #     train_count_dict[target_ip][out_]-=1
+                
+            #     if train_count_dict[target_ip][out_]==0:
+            #         del train_count_dict[target_ip][out_]
+            #     if data in train_count_dict[target_ip]:
+            #         train_count_dict[target_ip][data]+=1
+            #     else:
+            #         train_count_dict[target_ip][data]=1
+            #     train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
                 
             if target_ip not in train_label:
                 train_label[target_ip] = set()
@@ -138,15 +140,13 @@ def build_inverted_index(pattern_dict):
             inverted_index[word].append(key)
     return inverted_index
 
-def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
+def evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file):
 
     def check_train_label(i):
         for label in train_label[i]:
             if label.upper() != 'BENIGN':
                 return label
-        
-        return 'BENIGN'
-    
+
     train_counter = dict()
     train_window = global_.train_window
     if train_window:
@@ -161,10 +161,8 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
     test_sum_dict = dict()
     test_count_dict = dict()
     test_max_dict = dict()
-    denominator = global_.test_window
     
     for idx,key in tqdm(enumerate(test_key), total=len(test_key)):
-        
         label,ip,file = key.split("+")
         
         key_ = f'{ip}_{file}'
@@ -221,14 +219,15 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
                         sum_ += 1
 
                 test_sum_dict[key_][train_ip] = sum_
-                    
+
                 if  sum_ > test_max_sum_dict[key_]:
                     test_max_dict[key_] = train_ip
                     test_max_sum_dict[key_]= sum_
 
             if test_count_dict[key_][out_] == 0:
-                del test_count_dict[key_][out_]   
-    
+                del test_count_dict[key_][out_]
+
+    denominator = global_.test_window
     with open(f"{save_file}", "w", newline='', encoding='utf-8') as f:
         wr = csv.writer(f)
         wr.writerow(["Test IP", "Test IP Label", "Max IP", "Max IP Label", "Max Sim"])
@@ -239,6 +238,7 @@ def evaluate(train_multi_dict, train_label, test_data, test_key, save_file):
             if max_ip == 0:
                 wr.writerow([test_label_dict[ip] + '_' + ip, test_label_dict[ip], '-', '-' , '-'])
             else:
+                max_ip2 = max_ip
                 if len(max_ip.split("_"))==2:
                     max_ip2 = max_ip.split("_")[0]
                 wr.writerow([test_label_dict[ip] + '_' + ip, test_label_dict[ip], max_ip2, check_train_label(max_ip), test_max_sum_dict[ip]/denominator])
