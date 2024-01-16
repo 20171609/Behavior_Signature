@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, add_src, confidence, separate_attackIP, count_prot, train_window, test_window, n_components):
+def main(dataset_path, attack, change_feature, add_src, confidence, separate_attackIP, count_prot, train_window, test_window, n_components,real_time):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -185,19 +185,20 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
             pickle.dump(test_data,f)
     
     print(len(train_data))
-    train_multi_dict = make_quantization_debug_dict(train_data, train_key) 
-    test_multi_dict = make_quantization_debug_dict(test_data, test_key)
-
+    
+    train_multi_dict, train_label, attack_quantization_multi_set = make_quantization_dict(train_data, train_key)    
+    
     with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_multi_dict,f)
+    
+    if train_window and real_time:
+            train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
+        
+    test_multi_dict,test_label = make_quantization_test_dict(test_data, test_key)
+    
     with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
         pickle.dump(test_multi_dict,f)
-
-    if train_window:
-        train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
-    else:
-        train_multi_dict, train_label = make_quantization_dict(train_data, train_key)
-
+    
     if not os.path.isdir(f'./result'):
         os.mkdir(f'./result')
 
@@ -209,21 +210,25 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     file_name = f"cs({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})).csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
-    evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file)
+    if real_time:
+        evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file)
+    else:
+        evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file)
 
     #score 측정
 
 if __name__ == "__main__":
-    for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
+    for data in ['CTU-Rbot','CTU-Neris','CTU-Virut']:
         for attack in [1]: # 0이 정상 1이 공격 2가 혼합
             for change_feature in [False]:
                 for count_prot in [True]:
                     for seperate_attackIP in [True]:
                         for add_src in [True]:
-                            for confidence in [1.28, 10000000]:
-                                for n_components in [20, 30]:
+                            for confidence in [1.28]:
+                                for n_components in [20]:
                                     if confidence == 10000000 and n_components == 20:
                                         continue
-                                    for train_window in [0]:
-                                        for test_window in [10]:
-                                            main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components) # 마지막 False는 port 사용
+                                    for real_time in [0]:
+                                        for train_window in [10]:
+                                            for test_window in [10]:
+                                                main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time) # 마지막 False는 port 사용
