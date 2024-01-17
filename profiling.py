@@ -139,7 +139,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         check_star = True
                         target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:
-                        flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([]), 'srcPort' : deque([]), 'dstPort' : deque([])}
+                        flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([])}
 
                     if "*" in target_ip.split('_')[0]:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
@@ -149,6 +149,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         flow_stack[target_ip]['label'].append('Benign')
 
                     #if not global_.change_src:
+                    if global_.separate_attackIP:
+                        sip = sip.replace('*', '')
                     if target_ip.split('_')[0] == sip:
                         flow_stack[target_ip]['srcflag'].append(1)
                     else:
@@ -157,27 +159,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                     #if global_.count_prot:
                     flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
                     
-                    src_port = int_prot(flow[column_index['src_port']])
-                    dst_port = int_prot(flow[column_index['dst_port']])
-                    #if global_.usingPort:
-                    if global_.separate_attackIP:
-
-                        if target_ip == sip:
-                            flow_stack[target_ip]['srcPort'].append(0 if src_port <= 1024 else 1)
-                            flow_stack[target_ip]['dstPort'].append(0 if dst_port <= 1024 else 1)
-                        else:
-                            flow_stack[target_ip]['srcPort'].append(0 if dst_port <= 1024 else 1)
-                            flow_stack[target_ip]['dstPort'].append(0 if src_port <= 1024 else 1)
-
-                    else:
-                        check_ip = target_ip.replace("*", "")
-                        if check_ip == sip:
-                            flow_stack[target_ip]['srcPort'].append(0 if src_port <= 1024 else 1)
-                            flow_stack[target_ip]['dstPort'].append(0 if dst_port <= 1024 else 1)
-                        else:
-                            flow_stack[target_ip]['srcPort'].append(0 if dst_port <= 1024 else 1)
-                            flow_stack[target_ip]['dstPort'].append(0 if src_port <= 1024 else 1)
-
                     flow_stack[target_ip]['flow'].append(flow)
 
                     if len(flow_stack[target_ip]['flow']) == min_data:
@@ -210,15 +191,9 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                         profile_protflag.append(count_tmp)
                         flow_stack[target_ip]['protCount'].popleft()
-
-                        port_tmp = [sum(flow_stack[target_ip]['srcPort']), sum(flow_stack[target_ip]['dstPort'])]
-                        profile_port.append(port_tmp)
                         
                         flow_stack[target_ip]['flow'].popleft()
                         flow_stack[target_ip]['label'].popleft()
-
-                        flow_stack[target_ip]['srcPort'].popleft()
-                        flow_stack[target_ip]['dstPort'].popleft()
 
 
 
