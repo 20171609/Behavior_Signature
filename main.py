@@ -225,10 +225,10 @@ if __name__ == "__main__":
                     for seperate_attackIP in [True]:
                         for add_src in [True]:
                             for confidence in [1.28]:
-                                for n_components in [20]:
+                                for n_components in [20, 41]:
                                     if confidence == 10000000 and n_components == 20:
                                         continue
                                     for real_time in [0]:
-                                        for train_window in [10]:
+                                        for train_window in [0]:
                                             for test_window in [10]:
                                                 main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time) # 마지막 False는 port 사용
