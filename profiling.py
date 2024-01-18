@@ -101,7 +101,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         profile_key_list = []
         profile_srcflag = []
         profile_protflag = []
-        profile_port = []
         
         flow_stack = {}
         print(file)
@@ -209,11 +208,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_protflag_{file_name}.pkl', 'wb') as f:
             pickle.dump(profile_protflag, f)
 
-        with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_wellport_{file_name}.pkl', 'wb') as f:
-            pickle.dump(profile_port, f)
-
         del profile_list
         del profile_key_list
         del profile_srcflag
         del profile_protflag
-        del profile_port

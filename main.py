@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, add_src, confidence, separate_attackIP, count_prot, train_window, test_window, n_components,real_time):
+def main(dataset_path, attack, change_feature, add_src, confidence, separate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -105,8 +105,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     with open(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}", 'rb') as f:
         pattern_gmm = pickle.load(f)
    
-   
-    parameter += f'_pro({count_prot})_as({add_src})_conf({confidence})_n({n_components})'
+    parameter += f'_pro({count_prot})_as({add_src})_conf({confidence})_n({n_components})_zero({make_zero})'
     
     # ip별 퀀타이제이션 셋 만들기
     if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
@@ -120,6 +119,25 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
         train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
         test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
+
+        if make_zero:
+            for idx, data in enumerate(train_raw):
+                train_data_tmp = list(train_data[idx])  # Convert to list if it's a string for mutability
+                for idx_feature, d in enumerate(data):
+                    if d == 0:
+                        id_start, id_end = idx_feature * 2, idx_feature * 2 + 2
+                        train_data_tmp[id_start:id_end] = '00'  # Replace the slice with '00'
+
+                train_data[idx] = ''.join(train_data_tmp)  # Convert back to string if needed
+                    
+            for idx, data in enumerate(test_raw):
+                test_data_tmp = list(test_data[idx])  # Convert to list if it's a string for mutability
+                for idx_feature, d in enumerate(data):
+                    if d == 0:
+                        id_start, id_end = idx_feature * 2, idx_feature * 2 + 2
+                        test_data_tmp[id_start:id_end] = '00'  # Replace the slice with '00'
+
+                test_data[idx] = ''.join(test_data_tmp)  # Convert back to string if needed
 
         if add_src:
             #데이터 불러오기
@@ -168,7 +186,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
             test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
 
-        parameter += f'_pro({count_prot})_as({add_src})_conf({confidence})_n({n_components})'
+        parameter += f'_pro({count_prot})_as({add_src})_conf({confidence})_n({n_components})_zero({make_zero})'
 
         if not os.path.isdir(f"./debug_data"):
             os.mkdir(f"./debug_data")
@@ -207,7 +225,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # evaluate
     print("평가 시작")
-    file_name = f"cs({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})).csv"
+    file_name = f"as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zeor({make_zero}).csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     if real_time:
@@ -218,17 +236,25 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     #score 측정
 
 if __name__ == "__main__":
-    for data in ['CTU-Rbot','CTU-Neris','CTU-Virut']:
-        for attack in [1]: # 0이 정상 1이 공격 2가 혼합
-            for change_feature in [False]:
-                for count_prot in [True]:
-                    for seperate_attackIP in [True]:
-                        for add_src in [True]:
-                            for confidence in [1.28]:
-                                for n_components in [20, 41]:
-                                    if confidence == 10000000 and n_components == 20:
-                                        continue
-                                    for real_time in [0]:
-                                        for train_window in [0]:
-                                            for test_window in [10]:
-                                                main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time) # 마지막 False는 port 사용
+    try:
+        for data in ['CTU-Rbot','CTU-Neris','CTU-Virut']:
+            for attack in [1]: # 0이 정상 1이 공격 2가 혼합
+                for change_feature in [False]:
+                    for count_prot in [True]:
+                        for seperate_attackIP in [True]:
+                            for add_src in [True]:
+                                for confidence in [1.28]:
+                                    for n_components in [20, 41]:
+                                        if confidence == 10000000 and n_components == 20:
+                                            continue
+                                        for real_time in [0]:
+                                            for train_window in [0]:
+                                                for test_window in [10]:
+                                                    for make_zero in [True]:
+                                                        main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero) # 마지막 False는 port 사용
+
+    except:
+        error_info = traceback.format_exc()
+        with open('log.txt', 'a') as f:
+            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{add_src} add_src-_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+            f.write(f"{error_info}\n\n")
