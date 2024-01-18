@@ -374,6 +374,10 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
         train_multi_dict_n = dict()
         for train_ip in train_multi_dict:
             train_multi_dict_n[train_ip] = n_gram(train_multi_dict[train_ip],global_.train_window)
+    else:
+        train_multi_dict_c = dict()
+        for train_ip in train_multi_dict:
+            train_multi_dict_c[train_ip] = Counter(train_multi_dict[train_ip])
     
     with open(f"{save_file}", "w", newline='', encoding='utf-8') as f:
         wr = csv.writer(f)
@@ -410,7 +414,7 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
                 for test_block in test_list_n:
                     if check_sig(test_block,test_sig):
                         for train_ip in relevant_indices:             
-                            similarity = bag_similarity(train_multi_dict[train_ip],test_block)
+                            similarity = bag_similarity_counter(test_block,train_multi_dict_c[train_ip])
                             
                             if max_sim < similarity:
                                 max_sim =similarity
