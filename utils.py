@@ -224,11 +224,11 @@ def bag_similarity_counter(list1, counter2):
     return similarity
 
 def build_inverted_index(pattern_dict):
-    inverted_index = defaultdict(list)
+    inverted_index = defaultdict(set)
     
     for idx, key in enumerate(pattern_dict):
         for word in pattern_dict[key]:
-            inverted_index[word].append(key)
+            inverted_index[word].add(key)
     return inverted_index
 
 def evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file): # train window 로 train split여부 결정 가능 
