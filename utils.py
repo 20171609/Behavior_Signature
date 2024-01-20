@@ -177,9 +177,8 @@ def make_quantization_test_dict(test_data, test_key):
     
     for idx, key in enumerate(tqdm(test_key)):
         label, tmp_key, file = key.split('+')
-        target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
+        target_ip = f"{tmp_key.split('_')[0]}_{file}"
 
-        
         if target_ip not in test_multi_dict:
             test_multi_dict[target_ip] = []
         test_multi_dict[target_ip].append(test_data[idx])
@@ -190,18 +189,6 @@ def make_quantization_test_dict(test_data, test_key):
         test_label[target_ip].add(label)
 
     return test_multi_dict,test_label
-
-def jaccard(set1, set2):
-    intersection = len(set1.intersection(set2))
-    union = len(set1.union(set2))
-    containment = intersection / union
-    return containment
-
-def jaccard_contain(set1, set2):
-    intersection = len(set1.intersection(set2))
-    union = len(set1.union(set2))
-    containment = intersection / len(set1)
-    return containment
 
 def bag_similarity(list1, list2):
 
