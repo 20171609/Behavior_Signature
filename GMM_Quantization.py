@@ -123,12 +123,7 @@ class GMM_Pattering:
             self.table = {key: table_dict[key] for key in table_dict}
             self.sort_index = {key: sort_idx_dict[key] for key in sort_idx_dict}
             self.models = {key: model_dict[key] for key in model_dict}
-
-            # 결과 수집
-            self.table = {key: table_dict[key] for key in table_dict}
-            self.sort_index = {key: sort_idx_dict[key] for key in sort_idx_dict}
-            self.models = {key: model_dict[key] for key in model_dict}
-
+            
     def multi_transform(self, data, i=0, result_dict=False):
         print(f'[{i}] Transform Start')
         np_data = np.array(data)

@@ -12,7 +12,7 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, attack, change_feature, add_src, confidence, separate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero):
+def main(dataset_path, attack, change_feature, add_src, confidence, separate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero, using_minmax):
     # dataset_path = "CTU-Rbot"\
 
     # Profiling에 사용
@@ -32,9 +32,9 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
-    global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window)
+    global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -94,7 +94,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
     # GMM 이름
-    dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_GMM.pkl"
+    dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
 
     # GMM 생성 부분
     if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}"):
@@ -115,7 +115,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
             test_data = pickle.load(f)
     else:
-        parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})"
+        parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
 
         train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
         test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
@@ -225,7 +225,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # evaluate
     print("평가 시작")
-    file_name = f"as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zeor({make_zero}).csv"
+    file_name = f"as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zeor({make_zero})_mm({using_minmax}).csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     if real_time:
@@ -237,21 +237,20 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Rbot','CTU-Neris','CTU-Virut']:
+        for data in ['CTU-Rbot']:
             for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                 for change_feature in [False]:
                     for count_prot in [True]:
                         for seperate_attackIP in [True]:
-                            for add_src in [True]:
-                                for confidence in [1.28]:
-                                    for n_components in [20, 41]:
-                                        if confidence == 10000000 and n_components == 20:
-                                            continue
-                                        for real_time in [0]:
-                                            for train_window in [0]:
-                                                for test_window in [10]:
-                                                    for make_zero in [True]:
-                                                        main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero) # 마지막 False는 port 사용
+                            for using_minmax in [True]:
+                                for add_src in [True]:
+                                    for confidence in [1000000]:
+                                        for n_components in [40]:
+                                            for real_time in [0]:
+                                                for train_window in [0]:
+                                                    for test_window in [10]:
+                                                        for make_zero in [True]:
+                                                            main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero, using_minmax)
 
     except:
         error_info = traceback.format_exc()
