@@ -225,7 +225,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # evaluate
     print("평가 시작")
-    file_name = f"as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zeor({make_zero})_mm({using_minmax}).csv"
+    file_name = f"as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zero({make_zero})_mm({using_minmax}).csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     if real_time:
@@ -237,7 +237,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Rbot']:
+        for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
             for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                 for change_feature in [False]:
                     for count_prot in [True]:
@@ -245,7 +245,7 @@ if __name__ == "__main__":
                             for using_minmax in [True]:
                                 for add_src in [True]:
                                     for confidence in [1000000]:
-                                        for n_components in [40]:
+                                        for n_components in [40, 60, 80]:
                                             for real_time in [0]:
                                                 for train_window in [0]:
                                                     for test_window in [10]:
