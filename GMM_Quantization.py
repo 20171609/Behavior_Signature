@@ -123,7 +123,7 @@ class GMM_Pattering:
             self.table = {key: table_dict[key] for key in table_dict}
             self.sort_index = {key: sort_idx_dict[key] for key in sort_idx_dict}
             self.models = {key: model_dict[key] for key in model_dict}
-            
+
     def multi_transform(self, data, i=0, result_dict=False):
         print(f'[{i}] Transform Start')
         np_data = np.array(data)
@@ -137,15 +137,23 @@ class GMM_Pattering:
             pred = self.models[idx].predict(tmp_data).astype('<U12')
             for p_idx in range(len(pred)):
                 tmp_pred = int(pred[p_idx])
-                tmp_mean = self.table[idx][tmp_pred]['mean']
-                tmp_std = self.table[idx][tmp_pred]['std']
+                # tmp_mean = self.table[idx][tmp_pred]['mean']
+                # tmp_std = self.table[idx][tmp_pred]['std']
                 tmp_pred = self.sort_index[idx][tmp_pred] + 65
-                if tmp_mean - (self.confidence * tmp_std) > tmp_data[p_idx]:
-                    pred[p_idx] = f'-{chr(tmp_pred)}'
-                elif tmp_data[p_idx] > tmp_mean + (self.confidence * tmp_std):
-                    pred[p_idx] = f'-{chr(tmp_pred + 1)}'
-                else:
-                    pred[p_idx] = chr(tmp_pred).zfill(2)
+                first = 0
+
+                while tmp_pred > 90:
+                    first += 1
+                    tmp_pred -= 26
+                
+                
+                # RGMM부분
+                # if tmp_mean - (self.confidence * tmp_std) > tmp_data[p_idx]:
+                #     pred[p_idx] = f'-{chr(tmp_pred)}'
+                # elif tmp_data[p_idx] > tmp_mean + (self.confidence * tmp_std):
+                #     pred[p_idx] = f'-{chr(tmp_pred + 1)}'
+                # else:
+                pred[p_idx] = f'{first}{chr(tmp_pred)}'
             ret_data[:, idx] = pred
         if self.n_jobs == 1:
             return ret_data
