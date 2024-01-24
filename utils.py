@@ -324,11 +324,11 @@ def evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_f
 def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file):
     
     def check_train_label(i):
-        for label in train_label[i]:
-            if label.upper() != 'BENIGN':
-                return label
-        
-        return 'BENIGN'
+        label_set = set()
+        for ip_ in i:
+            label = ip_.split("_")[0]
+            label_set.add(label)
+        return label_set
     
     def check_test_label(i):
         for label in test_label[i]:
@@ -382,8 +382,8 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
             test_sig = set(test_multi_dict[ip]).intersection(attack_quantization_multi_set)
             
             max_sim = 0 
-            max_ip = 0
-            
+            max_ip = set()
+                        
             if global_.train_window:
                 for test_block in (test_list_n):
                     if check_sig(test_block,test_sig):
@@ -392,22 +392,25 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
                             for train_block in train_multi_dict_n[train_ip]:
                                 if check_sig(train_block,test_sig):
                                     similarity = bag_similarity_counter(train_block, test_counter)
-                                    if max_sim < similarity:
+                                    if max_sim == similarity:
                                         max_sim =similarity
-                                        max_ip = train_ip
-                                    if max_sim == 1:
-                                        break
+                                        max_ip.add(train_ip)
+                                    elif max_sim < similarity:
+                                        max_sim =similarity
+                                        max_ip=set(train_ip)
+                                  
             else:
                 for test_block in test_list_n:
                     if check_sig(test_block,test_sig):
                         for train_ip in relevant_indices:             
                             similarity = bag_similarity_counter(test_block,train_multi_dict_c[train_ip])
                             
-                            if max_sim < similarity:
+                            if max_sim == similarity:
                                 max_sim =similarity
-                                max_ip = train_ip
-                                if max_sim == 1:
-                                        break
+                                max_ip.add(train_ip)
+                            elif max_sim < similarity:
+                                max_sim =similarity
+                                max_ip=set(train_ip)
             if max_ip == 0:
                 wr.writerow([ip, check_test_label(ip), '-', '-' , '-'])
             else:
