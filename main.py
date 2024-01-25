@@ -93,6 +93,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     if not os.path.isdir(f'./preprocessing/{dataset_path}/GMM'):
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
 
+    print(len(train_raw))
     # GMM 이름
     dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
 
@@ -116,6 +117,8 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
             test_data = pickle.load(f)
     else:
         parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
+
+        pattern_gmm.n_jobs = 1
 
         train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
         test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
@@ -237,14 +240,14 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
 if __name__ == "__main__":
     try:
-        for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
+        for data in ['New-Neris', 'New-Rbot', 'CTU-Menti', 'CTU-Murlo', 'CTU-NSISay', 'CTU-Sogou']:
             for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                 for change_feature in [False]:
                     for count_prot in [True]:
                         for seperate_attackIP in [True]:
                             for using_minmax in [True]:
                                 for add_src in [True]:
-                                    for confidence in [1000000]:
+                                    for confidence in [1.28]:
                                         for n_components in [40, 60, 80]:
                                             for real_time in [0]:
                                                 for train_window in [0]:
