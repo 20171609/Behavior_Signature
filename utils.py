@@ -378,7 +378,8 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
             test_list_n = result
             
             relevant_indices = check_attack_dict(ip)
-            
+            if relevant_indices:
+                print(relevant_indices)
             test_sig = set(test_multi_dict[ip]).intersection(attack_quantization_multi_set)
             
             max_sim = 0 
@@ -393,11 +394,10 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
                                 if check_sig(train_block,test_sig):
                                     similarity = bag_similarity_counter(train_block, test_counter)
                                     if max_sim == similarity:
-                                        max_sim =similarity
                                         max_ip.add(train_ip)
                                     elif max_sim < similarity:
                                         max_sim =similarity
-                                        max_ip=set(train_ip)
+                                        max_ip=set([train_ip])
                                   
             else:
                 for test_block in test_list_n:
@@ -406,12 +406,11 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
                             similarity = bag_similarity_counter(test_block,train_multi_dict_c[train_ip])
                             
                             if max_sim == similarity:
-                                max_sim =similarity
                                 max_ip.add(train_ip)
                             elif max_sim < similarity:
                                 max_sim =similarity
-                                max_ip=set(train_ip)
-            if max_ip == 0:
+                                max_ip=set([train_ip])
+            if len(max_ip) == 0:
                 wr.writerow([ip, check_test_label(ip), '-', '-' , '-'])
             else:
                 wr.writerow([ip, check_test_label(ip), max_ip, check_train_label(max_ip), max_sim])
