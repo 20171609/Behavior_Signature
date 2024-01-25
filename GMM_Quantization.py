@@ -276,6 +276,7 @@ def make_gmm(train_raw, train_key, n_components, dp, dataset_path):
             if key.split('+')[0].upper() == "BENIGN":
                 train_attack.append(train_raw[idx])
 
+    print(len(train_attack))
     pattern_gmm = GMM_Pattering(ignore_idx=[0, 1, 2], random_seed=43, n_components=n_components,\
                                 max_iter=4000, n_jobs=6)
     pattern_gmm.fit(train_attack)

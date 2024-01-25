@@ -102,6 +102,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
         profile_srcflag = []
         profile_protflag = []
         
+        global_.change_col(file)
+
         flow_stack = {}
         print(file)
         file_name = file.split('\\')[-1].split('.')[0]

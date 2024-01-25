@@ -7,6 +7,8 @@ def initialize(path, change_feature_, attack_, separate_attackIP_, count_prot_, 
         col = f.readline().strip().split(',')
         column_index = {i : idx for idx, i in enumerate(col)}
 
+    print(column_index)
+    
     global attribute_map
     global attribute_map_inv
     global feature_func_map
@@ -109,3 +111,10 @@ def initialize(path, change_feature_, attack_, separate_attackIP_, count_prot_, 
         'std_dur':
             lambda x: np.std(x['duration']) if not change_feature else np.std(x['duration']) + np.mean(x['duration'])
     }
+
+def change_col(path):
+    global column_index
+    
+    with open(path, 'r', encoding='utf-8') as f:
+        col = f.readline().strip().split(',')
+        column_index = {i : idx for idx, i in enumerate(col)}
