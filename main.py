@@ -28,13 +28,14 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # test할 때 사용
     # seperate = True (얜 GMM도)
+    add_victim = False
 
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
     global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_vic({add_victim})"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -46,11 +47,11 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         os.mkdir(f'./preprocessing/{dataset_path}/profiling')
 
     print("Profiling 시작")
-    b_profiling(train_path, "train", parameter, min_data, dataset_path)
+    b_profiling(train_path, "train", parameter, min_data, dataset_path, add_victim)
     print("Profiling 끝")
 
     print("test profiling 시작")
-    b_profiling(test_path, "test", parameter, min_data, dataset_path)
+    b_profiling(test_path, "test", parameter, min_data, dataset_path, add_victim)
     print("Test 끝")
 
     train_raw = []
@@ -117,8 +118,6 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
             test_data = pickle.load(f)
     else:
         parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
-
-        pattern_gmm.n_jobs = 1
 
         train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
         test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
@@ -240,19 +239,19 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
 if __name__ == "__main__":
     try:
-        for data in ['New-Neris', 'New-Rbot', 'CTU-Menti', 'CTU-Murlo', 'CTU-NSISay', 'CTU-Sogou']:
+        for data in ['Test_Victim']:
             for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                 for change_feature in [False]:
-                    for count_prot in [True]:
+                    for count_prot in [False]:
                         for seperate_attackIP in [True]:
                             for using_minmax in [True]:
                                 for add_src in [True]:
-                                    for confidence in [1.28]:
-                                        for n_components in [40, 60, 80]:
+                                    for confidence in [1000000]:
+                                        for n_components in [80]:
                                             for real_time in [0]:
                                                 for train_window in [0]:
                                                     for test_window in [10]:
-                                                        for make_zero in [True]:
+                                                        for make_zero in [False]:
                                                             main(data, attack, change_feature, add_src, confidence, seperate_attackIP, count_prot, train_window, test_window, n_components,real_time, make_zero, using_minmax)
 
     except:
