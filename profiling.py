@@ -146,6 +146,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
                     elif check_star:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                    elif flow[column_index['Label']].upper() != 'BENIGN' and "*" not in target_ip and not check_star:
+                        flow_stack[target_ip]['label'].append('VICTIM')
                     else:
                         flow_stack[target_ip]['label'].append('Benign')
 
