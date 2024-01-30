@@ -82,7 +82,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
     # GMM 이름
-    dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
+    # dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
     dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_log.pkl"
     dp_bayes = f"p0({p0})_atk({attack})_mm({using_minmax})_bayes.pkl"
 
