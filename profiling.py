@@ -92,7 +92,7 @@ def add_flow(flow: list, target_ip):
     return attr_dict
 
 ## Behavior Profiling
-def b_profiling(data_path, t, parameter, min_data, dataset_path):
+def b_profiling(data_path, t, parameter, min_data, dataset_path, add_victim):
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
@@ -146,6 +146,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
                     elif check_star:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                    elif add_victim and flow[column_index['Label']].upper() != 'BENIGN' and "*" not in target_ip and not check_star:
+                        flow_stack[target_ip]['label'].append('VICTIM')
                     else:
                         flow_stack[target_ip]['label'].append('Benign')
 

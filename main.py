@@ -29,13 +29,14 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # test할 때 사용
     # seperate = True (얜 GMM도)
+    add_victim = False
 
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
     global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_vic({add_victim})"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -47,11 +48,11 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         os.mkdir(f'./preprocessing/{dataset_path}/profiling')
 
     print("Profiling 시작")
-    b_profiling(train_path, "train", parameter, min_data, dataset_path)
+    b_profiling(train_path, "train", parameter, min_data, dataset_path, add_victim)
     print("Profiling 끝")
 
     print("test profiling 시작")
-    b_profiling(test_path, "test", parameter, min_data, dataset_path)
+    b_profiling(test_path, "test", parameter, min_data, dataset_path, add_victim)
     print("Test 끝")
 
     train_raw = []

@@ -378,8 +378,8 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
             test_list_n = result
             
             relevant_indices = check_attack_dict(ip)
-            if relevant_indices:
-                print(relevant_indices)
+            # if relevant_indices:
+            #     print(relevant_indices)
             test_sig = set(test_multi_dict[ip]).intersection(attack_quantization_multi_set)
             
             max_sim = 0 
