@@ -96,7 +96,7 @@ class log_Pattering:
                     
             else:
                 bins_ = np.digitize(data,self.boundary_dict[idx],right=True).astype(int)
-                result_array = np.array([chr(int(x) + 65).zfill(2) for x in bins_])
+                result_array = np.array([f'{x // 26}{chr(x % 26 + 65)}' for x in bins_])
 
             signature_array = np.vstack([signature_array, result_array]) 
         
