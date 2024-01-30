@@ -29,7 +29,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # test할 때 사용
     # seperate = True (얜 GMM도)
-    add_victim = False
+    add_victim = True
 
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
@@ -97,7 +97,6 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
     if using_quan =='log' and not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
-    print(len(train_raw))
     # GMM 이름
     dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
     dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_log.pkl"
@@ -148,6 +147,9 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
             train_data = pattern_log.multi_transform(train_raw)
             test_data = pattern_log.multi_transform(test_raw)
+    
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_vic({add_victim})"
+
     if make_zero:
         for idx, data in enumerate(train_raw):
             train_data_tmp = list(train_data[idx])  # Convert to list if it's a string for mutability
@@ -179,7 +181,7 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         for file in train_ffiles_src:
             with open(file, 'rb') as f:
                 train_src += pickle.load(f)
-
+        print("src : ", len(train_src))
         train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
     
         test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
@@ -203,9 +205,9 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
         for file in train_ffiles_prt:
             with open(file, 'rb') as f:
                 train_prot += pickle.load(f)
-
+        print("prot : ", len(train_prot))
         train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
-    
+
         test_ffiles_prt = glob.glob(os.path.join(folder, 'test_protflag_*'))
         test_ffiles_prt.sort()
         for file in test_ffiles_prt:
@@ -253,7 +255,13 @@ def main(dataset_path, attack, change_feature, add_src, confidence, separate_att
 
     # evaluate
     print("평가 시작")
-    file_name = f"as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zero({make_zero})_mm({using_minmax}).csv"
+
+    if using_quan == 'gmm':
+        file_name = f"GMM_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zero({make_zero})_mm({using_minmax})_vic({add_victim}).csv"
+    elif using_quan == 'log':
+        file_name = f"Log_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_zero({make_zero})_mm({using_minmax})_vic({add_victim}).csv"
+    else:
+        print("뭘 저장하려는거지?")
     save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
     
     if real_time:
@@ -271,7 +279,7 @@ if __name__ == "__main__":
     make_zero = True
     real_time = 0
     try:
-        for data in ['CTU-Rbot']:
+        for data in ['All-CTU']:
             for attack in [1]: # 0이 정상 1이 공격 2가 혼합
                 for confidence in [1000000]:
                     for n_components in [1.2]:
