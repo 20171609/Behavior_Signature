@@ -72,10 +72,13 @@ class Bayesian_Block:
                 x = pred[p_idx]
                 new_data.append(f'{x // 26}{chr(x % 26 + 65)}')
             ret_data[:, idx] = new_data
+
+        tmp = [''.join(ret) for ret in ret_data]
+        
         if self.n_jobs == 1:
-            return ret_data
+            return tmp
         else:
-            result_dict[i] = ret_data
+            result_dict[i] = tmp
 
     def transform(self, data):
         if self.n_jobs == 1:
@@ -104,6 +107,7 @@ class Bayesian_Block:
 
             processed_chunks = [result_dict[i] for i in range(len(result_dict))]
             ret_data = np.vstack(processed_chunks)
+
         return ret_data
 
 def make_Bayesian(train_raw, train_key, p0, dp, dataset_path):
@@ -123,7 +127,7 @@ def make_Bayesian(train_raw, train_key, p0, dp, dataset_path):
                 train_attack.append(train_raw[idx])
 
     print(len(train_attack))
-    pattern_gmm = Bayesian_Block(ignore_idx=[0, 1, 2], p0=p0, n_jobs=6)
+    pattern_gmm = Bayesian_Block(ignore_idx=[0, 1, 2], p0=p0, n_jobs=1)
     pattern_gmm.multi_fit(train_attack)
 
     with open(f"./preprocessing/{dataset_path}/Bayesian/{dp}", 'wb') as f:
