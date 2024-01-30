@@ -15,13 +15,17 @@ class Bayesian_Block:
         self.p0 = p0
         self.boundary = dict()
     
-    def multi_fit(self, idx, data, result_dict):
-        if idx in self.ignore_idx:
-            pass
-        else:
-            edges = bayesian_blocks(data, fitness='events', p0=self.p0)
-        
-        result_dict[idx] = edges
+    def multi_fit(self, data_):
+        data_ = np.array(data_)
+        for i in range(len(data_[0])):
+            data = data_[:, i].flatten()
+            if i in self.ignore_idx:
+                self.boundary[i] = []
+                continue
+            dim_data_nonzero = data[data != 0]
+            edges = bayesian_blocks(dim_data_nonzero, fitness='events', p0=self.p0)
+
+            self.boundary[i] = edges
     
     def fit(self, data):
         self.data_count = len(data)
@@ -36,7 +40,7 @@ class Bayesian_Block:
             futures = []
             for i in range(len(data[0])):
                 # 각 프로세스에 대한 작업을 예약하고 futures 리스트에 추가
-                future = executor.submit(self.multi_fit, i, np_data[:, i].reshape(-1, 1), boundary_dict)
+                future = executor.submit(self.multi_fit, i, np_data[:, i].flatten())
                 futures.append(future)
 
             # 모든 프로세스의 완료를 기다리고 결과 확인
@@ -47,9 +51,6 @@ class Bayesian_Block:
                 except Exception as e:
                     # 예외 처리: 프로세스에서 발생한 예외를 처리
                     print(f"프로세스 실행 중 오류 발생: {e}")
-
-        # 결과 수집
-        self.boundary = {key: boundary_dict[key] for key in boundary_dict}
 
     def multi_transform(self, data, i=0, result_dict=False):
         print(f'[{i}] Transform Start')
@@ -62,13 +63,15 @@ class Bayesian_Block:
                     list(map(lambda x: chr(int(float(x)) + 65).zfill(2), np_data[:, idx].astype('<U12'))))
                 continue
 
-            tmp_data = np_data[:, idx].reshape(-1, 1)
+            tmp_data = np_data[:, idx].flatten()
             pred = np.searchsorted(self.boundary[idx], tmp_data)
+
+            new_data = []
             
             for p_idx in range(len(pred)):
                 x = pred[p_idx]
-                pred[p_idx] = f'{x // 26}{chr(x % 26 + 65)}'
-            ret_data[:, idx] = pred
+                new_data.append(f'{x // 26}{chr(x % 26 + 65)}')
+            ret_data[:, idx] = new_data
         if self.n_jobs == 1:
             return ret_data
         else:
@@ -120,8 +123,8 @@ def make_Bayesian(train_raw, train_key, p0, dp, dataset_path):
                 train_attack.append(train_raw[idx])
 
     print(len(train_attack))
-    pattern_gmm = Bayesian_Block(ignore_idx=[0, 1, 2], random_seed=43, p0=p0, n_jobs=6)
-    pattern_gmm.fit(train_attack)
+    pattern_gmm = Bayesian_Block(ignore_idx=[0, 1, 2], p0=p0, n_jobs=6)
+    pattern_gmm.multi_fit(train_attack)
 
     with open(f"./preprocessing/{dataset_path}/Bayesian/{dp}", 'wb') as f:
         pickle.dump(pattern_gmm, f)

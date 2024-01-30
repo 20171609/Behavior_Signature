@@ -80,6 +80,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         os.mkdir(f'./preprocessing/{dataset_path}/GMM')
     if using_quan =='log' and not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
+    if using_quan =='bayesian' and not os.path.isdir(f'./preprocessing/{dataset_path}/Bayesian'):
+        os.mkdir(f'./preprocessing/{dataset_path}/Bayesian')
 
     # GMM 이름
     # dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
@@ -107,7 +109,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     elif using_quan == 'bayesian':
         if not os.path.isfile(f"./preprocessing/{dataset_path}/Bayesian/{dp_bayes}"):
             print("LOG boundary 생성 해야함")
-            make_Bayesian(train_raw, train_key, p0, dataset_path ,dp_bayes)
+            make_Bayesian(train_raw, train_key, p0, dp_bayes, dataset_path)
 
         print(f"p0:{p0} {attack}attack Bayesian 불러옴")
         with open(f"./preprocessing/{dataset_path}/Bayesian/{dp_bayes}", 'rb') as f:
@@ -292,17 +294,17 @@ if __name__ == "__main__":
     count_prot = True
     using_minmax = True
     add_src = True
-    make_zero = True
+    make_zero = False
     real_time = 0
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     train_window = 0
     test_window = 10
-    victim = True
+    victim = False
     p0 = 0.05
     logN = 1.2
 
     try:
-        for data in ['All-CTU']:
+        for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
             for using_quan in ['bayesian']:
                 main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, make_zero, using_minmax, using_quan, victim, p0)
 
