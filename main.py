@@ -14,13 +14,13 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, add_victim, p0):
+def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
     global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_vic({add_victim})"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -32,11 +32,11 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         os.mkdir(f'./preprocessing/{dataset_path}/profiling')
 
     print("Profiling 시작")
-    b_profiling(train_path, "train", parameter, min_data, dataset_path, add_victim)
+    b_profiling(train_path, "train", parameter, min_data, dataset_path)
     print("Profiling 끝")
 
     print("test profiling 시작")
-    b_profiling(test_path, "test", parameter, min_data, dataset_path, add_victim)
+    b_profiling(test_path, "test", parameter, min_data, dataset_path)
     print("Test 끝")
 
     train_raw = []
@@ -85,8 +85,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
     # GMM 이름
     # dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
-    dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_vic({add_victim})_log.pkl"
-    dp_bayes = f"p0({p0})_atk({attack})_mm({using_minmax})_vic({add_victim})_bayes.pkl"
+    dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_log.pkl"
+    dp_bayes = f"p0({p0})_atk({attack})_mm({using_minmax})_bayes.pkl"
 
     # GMM 생성 부분
     # if using_quan=='gmm':
@@ -160,7 +160,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
             train_data = pattern_model.transform(train_raw)
             test_data = pattern_model.transform(test_raw)
     
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_vic({add_victim})"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
 
     if add_src:
         #데이터 불러오기
@@ -255,9 +255,9 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     # if using_quan == 'gmm':
     #     file_name = f"GMM_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_mm({using_minmax})_vic({add_victim}).csv"
     if using_quan == 'log':
-        file_name = f"log({n_components})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})-vic({add_victim}).csv"
+        file_name = f"log({n_components})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax}).csv"
     elif using_quan == 'bayesian':
-        file_name = f"p0({p0})_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})-vic({add_victim}).csv"
+        file_name = f"p0({p0})_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax}).csv"
 
     save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
     
@@ -277,14 +277,13 @@ if __name__ == "__main__":
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     train_window = 0
     test_window = 10
-    victim = True
     p0 = 0.05
     logN = 1.2
 
     try:
-        for data in ['CTU-Rbot', 'CTU-Neris', 'CTU-Virut']:
+        for data in ['MTA-old']:
             for using_quan in ['log', 'bayesian']:
-                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, victim, p0)
+                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0)
 
     except:
         error_info = traceback.format_exc()
