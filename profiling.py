@@ -142,14 +142,16 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, add_victim):
                     if target_ip not in flow_stack:
                         flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([])}
 
-                    if "*" in target_ip.split('_')[0]:
+                    if not add_victim:
+                        if "*" in target_ip.split('_')[0]:
+                            flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                        elif check_star:
+                            flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                        else:
+                            flow_stack[target_ip]['label'].append('Benign')
+                    
+                    elif add_victim:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
-                    elif check_star:
-                        flow_stack[target_ip]['label'].append(flow[column_index['Label']])
-                    elif add_victim and flow[column_index['Label']].upper() != 'BENIGN' and "*" not in target_ip and not check_star:
-                        flow_stack[target_ip]['label'].append('VICTIM')
-                    else:
-                        flow_stack[target_ip]['label'].append('Benign')
 
                     #if not global_.change_src:
                     if global_.separate_attackIP:
