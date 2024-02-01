@@ -31,7 +31,7 @@ class log_Pattering:
         #min_data = min(feature_list)
         max_data = max(feature_list)
         #make original_list
-        original_list = [0]
+        original_list = [-1,0]
 
         tmp=1
         i=1
@@ -42,7 +42,7 @@ class log_Pattering:
         len_ = len(original_list)
         
         #make real_boundary
-        real_boundary = [0]
+        real_boundary = []
         for idx,scale in enumerate(original_list):
                 
             if idx==(len_-1):
@@ -50,7 +50,7 @@ class log_Pattering:
             left = scale
             right = original_list[idx+1]
         
-            filtered_array = feature_list[(feature_list >= left) & (feature_list < right)]
+            filtered_array = feature_list[(feature_list > left) & (feature_list <= right)]
 
             if len(filtered_array)==0:
                 if left !=0:
@@ -95,6 +95,7 @@ class log_Pattering:
                     result_array = np.array([chr(x + 65).zfill(2) for x in data])
                     
             else:
+                
                 bins_ = np.digitize(data,self.boundary_dict[idx],right=True).astype(int)
                 result_array = np.array([f'{x // 26}{chr(x % 26 + 65)}' for x in bins_])
 
