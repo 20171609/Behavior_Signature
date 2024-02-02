@@ -31,7 +31,7 @@ class log_Pattering:
         #min_data = min(feature_list)
         max_data = max(feature_list)
         #make original_list
-        original_list = [-1,0]
+        original_list = [0]
 
         tmp=1
         i=1
@@ -42,7 +42,7 @@ class log_Pattering:
         len_ = len(original_list)
         
         #make real_boundary
-        real_boundary = []
+        real_boundary = [-1,0]
         for idx,scale in enumerate(original_list):
                 
             if idx==(len_-1):
@@ -54,19 +54,19 @@ class log_Pattering:
 
             if len(filtered_array)==0:
                 if left !=0:
-                    real_boundary.append(left)
+                    real_boundary.append(right)
                 continue
             
-            filtered_int = np.round(filtered_array,1)
+            #filtered_int = np.round(filtered_array,1)
 
-            unique_elements, counts = np.unique(filtered_int, return_counts=True)            
-            min_freq_bin = unique_elements[np.argmin(counts)]
+            #unique_elements, counts = np.unique(filtered_int, return_counts=True)            
+            #min_freq_bin = unique_elements[np.argmin(counts)]
             
-            filtered_array = feature_list[(feature_list >= min_freq_bin-0.05) & (feature_list < (min_freq_bin+0.05))]            
+            #filtered_array = feature_list[(feature_list >= min_freq_bin-0.05) & (feature_list < (min_freq_bin+0.05))]            
             midian_value = self.find_min_frequency_value(filtered_array)
 
-            if midian_value == 0:
-                continue
+            # if midian_value == 0:
+            #     continue
             real_boundary.append(midian_value)
         return real_boundary
     
