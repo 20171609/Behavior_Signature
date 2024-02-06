@@ -44,12 +44,14 @@ class log_Pattering:
         #make real_boundary
         real_boundary = [-1,0]
         for idx,scale in enumerate(original_list):
-                
-            if idx==(len_-1):
-                continue
+            
             left = scale
-            right = original_list[idx+1]
-        
+                            
+            if idx==(len_-1):
+                right = max_data+1    
+            else:
+                right = original_list[idx+1]
+            
             filtered_array = feature_list[(feature_list > left) & (feature_list <= right)]
 
             if len(filtered_array)==0:
