@@ -50,6 +50,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     
     # 'train_feature'으로 시작하는 모든 파일 찾기
     train_ffiles = glob.glob(os.path.join(folder, 'train_feature*'))
+
     train_ffiles.sort()
     for file in train_ffiles:
         with open(file, 'rb') as f:
@@ -108,7 +109,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
     elif using_quan == 'bayesian':
         if not os.path.isfile(f"./preprocessing/{dataset_path}/Bayesian/{dp_bayes}"):
-            print("LOG boundary 생성 해야함")
+            print("bayesian boundary 생성 해야함")
             make_Bayesian(train_raw, train_key, p0, dp_bayes, dataset_path)
 
         print(f"p0:{p0} {attack}attack Bayesian 불러옴")
@@ -161,7 +162,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
             test_data = pattern_model.transform(test_raw)
     
     parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
-
+    
+    
     if add_src:
         #데이터 불러오기
         folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
@@ -277,12 +279,12 @@ if __name__ == "__main__":
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     train_window = 0
     test_window = 10
-    p0 = 0.05
-    logN = 1.2
+    p0 = 0.9
+    logN = 1.8
 
     try:
-        for data in ['MTA-old']:
-            for using_quan in ['log', 'bayesian']:
+        for data in ['All-CTU-background']:
+            for using_quan in ['log']:
                 main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0)
 
     except:

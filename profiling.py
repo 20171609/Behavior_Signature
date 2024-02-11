@@ -15,7 +15,7 @@ class Profile:
         'target_port': lambda x: int(x, 16) if x.startswith('0x') else int(float(x)),
         'opposite_ip': lambda x: str(x),
         'opposite_port': lambda x: int(x, 16) if x.startswith('0x') else int(float(x)),
-        'duration': lambda x: float(x),
+        'duration': lambda x: float(x) * 1000,
         'target_pkts': lambda x: int(float(x)),
         'opposite_pkts': lambda x: int(float(x)),
         'target_bytes': lambda x: int(float(x)),

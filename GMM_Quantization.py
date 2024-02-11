@@ -264,8 +264,9 @@ def make_gmm(train_raw, train_key, n_components, dp, dataset_path):
     train_attack = []
     if global_.attack == 1:
         for idx, key in enumerate(train_key):
-            if key.split('+')[0].upper() != "BENIGN":
-                    train_attack.append(train_raw[idx])
+            label = key.split('+')[0]
+            if ("BENIGN" not in label) or ("BACKGROUND" not in label):
+                train_attack.append(train_raw[idx])
 
     elif global_.attack == 2:
         for idx, key in enumerate(train_key):
@@ -273,7 +274,7 @@ def make_gmm(train_raw, train_key, n_components, dp, dataset_path):
     
     elif global_.attack == 0:
         for idx, key in enumerate(train_key):
-            if key.split('+')[0].upper() == "BENIGN":
+            if ("BENIGN" in label) or ("BACKGROUND" in label):
                 train_attack.append(train_raw[idx])
 
     print(len(train_attack))
