@@ -57,8 +57,7 @@ class log_Pattering:
         
         Nlog_list = [1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
         
-        min_entropy = 999999
-        before_entropy = 0 
+        min_entropy = 999999 
         
         data_len = len(feature_list)
         
@@ -105,9 +104,6 @@ class log_Pattering:
                 real_boundary = tmp_boundary
                 min_entropy = entropy
                 self.n_log = logN
-            elif before_entropy < entropy:
-                break
-            before_entropy = entropy
         
         return real_boundary
     
