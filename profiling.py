@@ -148,7 +148,11 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                     elif check_star:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']])
                     else:
-                        flow_stack[target_ip]['label'].append('Benign')
+                        if 'BENIGN' not in flow[column_index['Label']].upper() and 'BACKGROUND' not in flow[column_index['Label']].upper():
+                            flow_stack[target_ip]['label'].append('BENIGN')
+                        
+                        else:
+                            flow_stack[target_ip]['label'].append(flow[column_index['Label']])
 
                     #if not global_.change_src:
                     if global_.separate_attackIP:
