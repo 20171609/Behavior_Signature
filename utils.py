@@ -19,15 +19,20 @@ def get_str_time(int_time):
     datetime_format = '%Y-%m-%d %H:%M:%S'
     return datetime.fromtimestamp(int_time).strftime(datetime_format)
 
+# 가정 : 한 IP가 두개의 공격을 하지 않음
 def check_label(label_list):
     uni_label = np.unique(label_list)
-    
-    answer = "BENIGN"
-    for label in uni_label:
-        label = label.upper()
-        if ("BENIGN" not in label):
-            return label
-    return answer 
+
+    if len(uni_label) == 1:
+        return uni_label[0].upper()
+
+    else:
+        for label in uni_label:
+            label = label.upper()
+            if ("BENIGN" not in label) and ("BACKGROUND" not in label):
+                return label
+        
+        return "BENIGN-MIX"
 
 def check_flow_label(label):
     label = label.upper()
@@ -47,7 +52,7 @@ def make_quantization_dict_window(train_data, train_key, train_window):
         target_ip_idx = f'{target_ip}_{idx}'
         data = train_data[idx]
         
-        if label != 'BENIGN':
+        if ('BENIGN' not in label) and ("BACKGROUND" not in label):
             if target_ip_idx not in train_multi_dict: 
                 train_multi_dict[target_ip_idx] = []
             if target_ip not in train_count_dict:
@@ -100,7 +105,7 @@ def make_quantization_dict_window_notreal(train_data, train_key, train_window):
         target_ip_idx = f'{target_ip}_{idx}'
         data = train_data[idx]
         
-        if label != 'BENIGN':
+        if ('BENIGN' not in label) and ("BACKGROUND" not in label):
             if target_ip_idx not in train_multi_dict: 
                 train_multi_dict[target_ip_idx] = []
             if target_ip not in train_count_dict:
@@ -147,7 +152,7 @@ def make_quantization_dict(train_data, train_key):
     for idx, key in enumerate(tqdm(train_key)):
         label, tmp_key, file = key.split('+')
         target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
-        if label != 'BENIGN':
+        if ('BENIGN' not in label) and ("BACKGROUND" not in label):
             if target_ip not in train_multi_dict:
                 train_multi_dict[target_ip] = []
             train_multi_dict[target_ip].append(train_data[idx])
@@ -222,7 +227,7 @@ def evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_f
 
     def check_train_label(i):
         for label in train_label[i]:
-            if label.upper() != 'BENIGN':
+            if ('BENIGN' not in label) and ("BACKGROUND" not in label):
                 return label
 
     train_counter = dict()
@@ -261,13 +266,13 @@ def evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_f
         
         if key_ not in test_label_dict: #test label dict 생성 
             test_label_dict[key_] = label
-        elif label.upper()!='BENIGN':
+        elif ('BENIGN' not in label) and ("BACKGROUND" not in label):
             test_label_dict[key_]=label
         
         if len(test_multi_dict[key_])==global_.test_window: # case1. 처음 10개 유사도 계산 
             sig_list = test_multi_dict[key_]
 
-            for train_ip in train_counter.keys():    
+            for train_ip in train_counter.keys():
                 sum_ = 0
                 if train_ip not in test_sum_dict[key_]:
                     test_sum_dict[key_][train_ip]=0
@@ -331,11 +336,15 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
         return label_set
     
     def check_test_label(i):
+        if len(test_label[i]) == 1:
+            return list(test_label[i])[0]
+
         for label in test_label[i]:
-            if label.upper() != 'BENIGN':
+            if ('BENIGN' not in label) and ("BACKGROUND" not in label):
                 return label
-        
-        return 'BENIGN'
+
+        return "BENIGN-MIX"
+
     def check_attack_dict(ip):
         relevant_indices = set()
         signature_ = test_multi_dict[ip]
@@ -402,7 +411,11 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
             else:
                 for test_block in test_list_n:
                     if check_sig(test_block,test_sig):
-                        for train_ip in relevant_indices:             
+                        for train_ip in relevant_indices:
+                            tmp = '_'.join(train_ip.split('_')[1:])
+                            
+                            if ip == tmp:
+                                continue
                             similarity = bag_similarity_counter(test_block,train_multi_dict_c[train_ip])
                             
                             if max_sim == similarity:
