@@ -10,7 +10,7 @@ class log_Pattering:
     def __init__(self, ignore_idx=[0,1,2], n_log_ = 1.2, n_jobs = 1):
         
         self.ignore_idx = ignore_idx
-        self.n_log = n_log_
+        self.n_log = {}
         self.boundary_dict = {}
         
     def find_min_frequency_value(self,lst):
@@ -57,12 +57,12 @@ class log_Pattering:
         
         Nlog_list = [1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
         
-        min_entropy = 9999999
+        min_entropy = 99999
         
         data_len = len(feature_list)
         
         real_boundary = [(2)**(i) for i in range(1,1000)]
-        
+        choice_N = 2
         for logN in Nlog_list:
             original_list = [0]
             tmp=1
@@ -103,9 +103,9 @@ class log_Pattering:
             if min_entropy >= entropy:
                 real_boundary = tmp_boundary
                 min_entropy = entropy
-                self.n_log = logN
+                choice_N = logN
         
-        return real_boundary
+        return real_boundary,choice_N
     
     def multi_fit(self, data):
         boundary_dict = dict()
@@ -115,7 +115,8 @@ class log_Pattering:
         for idx,feature_data in tqdm(enumerate(arrayT),total = len(arrayT)):
             if idx in self.ignore_idx:
                 continue
-            boundary_dict[idx] = self.make_boundary(self.n_log,feature_data)
+            boundary_dict[idx],f_log_n = self.make_boundary(self.n_log,feature_data)
+            self.n_log[idx]=f_log_n
         self.boundary_dict = boundary_dict
     
     def multi_transform(self,data_list):
