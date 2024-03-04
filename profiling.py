@@ -126,7 +126,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                     continue
 
                 if ignore_background:
-                    if flow[column_index['Label']] == 'Background':
+                    if flow[column_index['Label']].upper() == 'BACKGROUND':
                         continue
                     
                 if flow[column_index['src_port']] == '':
@@ -148,15 +148,15 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
 
 
                     if "*" in target_ip.split('_')[0]:
-                        flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                        flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
                     elif check_star:
-                        flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                        flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
                     else:
                         if 'BENIGN' not in flow[column_index['Label']].upper() and 'BACKGROUND' not in flow[column_index['Label']].upper():
                             flow_stack[target_ip]['label'].append('BENIGN')
                         
                         else:
-                            flow_stack[target_ip]['label'].append(flow[column_index['Label']])
+                            flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
 
                     #if not global_.change_src:
                     if global_.separate_attackIP:
