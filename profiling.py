@@ -15,7 +15,7 @@ class Profile:
         'target_port': lambda x: int(x, 16) if x.startswith('0x') else int(float(x)),
         'opposite_ip': lambda x: str(x),
         'opposite_port': lambda x: int(x, 16) if x.startswith('0x') else int(float(x)),
-        'duration': lambda x: float(x) * 1000,
+        'duration': lambda x: float(x),
         'target_pkts': lambda x: int(float(x)),
         'opposite_pkts': lambda x: int(float(x)),
         'target_bytes': lambda x: int(float(x)),
@@ -92,7 +92,7 @@ def add_flow(flow: list, target_ip):
     return attr_dict
 
 ## Behavior Profiling
-def b_profiling(data_path, t, parameter, min_data, dataset_path):
+def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_background):
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
@@ -124,6 +124,10 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                 flow = tmp_flow.strip().split(',')
                 if flow[0] == '':
                     continue
+
+                if ignore_background:
+                    if flow[column_index['Label']] == 'Background':
+                        continue
                     
                 if flow[column_index['src_port']] == '':
                     flow[column_index['src_port']] = "-1"
