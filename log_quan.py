@@ -5,6 +5,7 @@ from tqdm import tqdm
 import multiprocessing as mp
 import global_
 from collections import Counter
+import sys
 
 class log_Pattering:
     def __init__(self, ignore_idx=[0,1,2], n_log_ = 1.2, n_jobs = 1):
@@ -57,7 +58,7 @@ class log_Pattering:
         
         Nlog_list = [1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
         
-        min_entropy = 99999
+        min_entropy = sys.maxsize
         
         data_len = len(feature_list)
         
