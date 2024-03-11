@@ -128,7 +128,10 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                 if ignore_background:
                     if flow[column_index['Label']].upper() == 'BACKGROUND':
                         continue
-                    
+                
+                if t == 'train' and (flow[column_index['Label']].upper() == 'BENIGN'):
+                    continue
+
                 if flow[column_index['src_port']] == '':
                     flow[column_index['src_port']] = "-1"
 
@@ -138,6 +141,9 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                 sip, dip = flow[column_index['source']], flow[column_index['destination']]
                 
                 for target_ip in [sip, dip]:
+                    if t == 'train' and '*' not in target_ip:
+                        continue
+
                     check_star = False
                     
                     if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
@@ -204,7 +210,6 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                         
                         flow_stack[target_ip]['flow'].popleft()
                         flow_stack[target_ip]['label'].popleft()
-
 
 
         with open(f'./preprocessing/{dataset_path}/profiling/{parameter}/{t}_feature_{file_name}.pkl', 'wb') as f:
