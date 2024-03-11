@@ -14,13 +14,13 @@ from utils import *
 from profiling import b_profiling
 import traceback
 
-def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background):
+def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
     global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -77,27 +77,15 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         with open(file, 'rb') as f:
             test_key += pickle.load(f)
 
-    if using_quan =='gmm' and not os.path.isdir(f'./preprocessing/{dataset_path}/GMM'):
-        os.mkdir(f'./preprocessing/{dataset_path}/GMM')
+
     if using_quan =='log' and not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
-    if using_quan =='bayesian' and not os.path.isdir(f'./preprocessing/{dataset_path}/Bayesian'):
-        os.mkdir(f'./preprocessing/{dataset_path}/Bayesian')
 
     # GMM 이름
     # dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
-    dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_ib{ignore_background}_log.pkl"
-    dp_bayes = f"p0({p0})_atk({attack})_mm({using_minmax})_bayes.pkl"
+    dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_{count}c_log.pkl"
 
     # GMM 생성 부분
-    # if using_quan=='gmm':
-    #     if not os.path.isfile(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}"):
-    #         print("GMM 생성 해야함")
-    #         make_gmm(train_raw, train_key, n_components, dp_GMM, dataset_path)
-
-    #     print(f"{n_components}n {attack}attack GMM 불러옴")
-    #     with open(f"./preprocessing/{dataset_path}/GMM/{dp_GMM}", 'rb') as f:
-    #         pattern_gmm = pickle.load(f)
     if using_quan =='log':
         if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
             print("LOG boundary 생성 해야함")
@@ -107,23 +95,26 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'rb') as f:
             pattern_model = pickle.load(f)
 
-    elif using_quan == 'bayesian':
-        if not os.path.isfile(f"./preprocessing/{dataset_path}/Bayesian/{dp_bayes}"):
-            print("bayesian boundary 생성 해야함")
-            make_Bayesian(train_raw, train_key, p0, dp_bayes, dataset_path)
-
-        print(f"p0:{p0} {attack}attack Bayesian 불러옴")
-        with open(f"./preprocessing/{dataset_path}/Bayesian/{dp_bayes}", 'rb') as f:
-            pattern_model = pickle.load(f)
-        pattern_model.n_jobs =1
 
     if using_quan == 'log':
         parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
-    elif using_quan == 'bayesian':
-        parameter += f'_pro({count_prot})_as({add_src})_p0({p0})'
     
-    # ip별 퀀타이제이션 셋 만들기
-    # if using_quan=='gmm':
+
+    # train_raw = np.array(train_raw)
+    # test_raw = np.array(test_raw)
+
+    # train_raw[:, 7] = 0
+    # train_raw[:,12] = 0
+    # train_raw[:, 17] = 0
+    # train_raw[:, 22] = 0
+    
+    # test_raw[:, 7] = 0
+    # test_raw[:,12] = 0
+    # test_raw[:, 17] = 0
+    # test_raw[:, 22] = 0
+
+
+    # if using_quan=='log':
     #     if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
     #         with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'rb') as f:
     #             train_data = pickle.load(f)
@@ -131,37 +122,11 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     #         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
     #             test_data = pickle.load(f)
                 
-    #     else:
-    #         parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})"
-
-    #         train_data = pattern_gmm.transform_tokenize(train_raw, confidence=confidence)
-    #         test_data = pattern_gmm.transform_tokenize(test_raw, confidence=confidence)
+    #else:
+    train_data = pattern_model.multi_transform(train_raw)
+    test_data = pattern_model.multi_transform(test_raw)
     
-    if using_quan=='log':
-        if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
-            with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'rb') as f:
-                train_data = pickle.load(f)
-                
-            with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
-                test_data = pickle.load(f)
-                
-        else:
-            train_data = pattern_model.multi_transform(train_raw)
-            test_data = pattern_model.multi_transform(test_raw)
-
-    if using_quan=='bayesian':
-        if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
-            with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'rb') as f:
-                train_data = pickle.load(f)
-                
-            with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
-                test_data = pickle.load(f)
-                
-        else:
-            train_data = pattern_model.transform(train_raw)
-            test_data = pattern_model.transform(test_raw)
-    
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}"
+    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
     
     
     if add_src:
@@ -213,8 +178,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
     if using_quan == 'log':
         parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
-    elif using_quan == 'bayesian':
-        parameter += f'_pro({count_prot})_as({add_src})_p0({p0})'
 
     if not os.path.isdir(f"./debug_data"):
         os.mkdir(f"./debug_data")
@@ -257,9 +220,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     # if using_quan == 'gmm':
     #     file_name = f"GMM_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_mm({using_minmax})_vic({add_victim}).csv"
     if using_quan == 'log':
-        file_name = f"log({logN})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}.csv"
-    elif using_quan == 'bayesian':
-        file_name = f"p0({p0})_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax}).csv"
+        file_name = f"log({logN})-as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}__c{count}.csv"
 
     save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
     
@@ -269,10 +230,10 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file)
 
 if __name__ == "__main__":
-    min_data = 5
+    min_data = 10
     change_feature = False
     seperate_attackIP = True
-    count_prot = True
+    count_prot = False
     using_minmax = True
     add_src = True
     real_time = 0
@@ -280,13 +241,14 @@ if __name__ == "__main__":
     train_window = 0
     test_window = 10
     p0 = 0.9
-    logN = 2.2
+    logN = "MTA check"
     using_quan = 'log'
+    count = 18 # 8은 10000이하 제거
 
     try:
-        for data in ['CTU-MTA-CIC']:
-            for ignore_background  in [False]:
-                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background)
+        for data in ['CTU-CIC-micro-final']:
+            for ignore_background  in [True]:
+                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count)
 
     except:
         error_info = traceback.format_exc()
