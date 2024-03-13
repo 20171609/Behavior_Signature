@@ -78,7 +78,7 @@ class log_Pattering:
             
             #make real_boundary
             
-            tmp_boundary = [-1,0]
+            tmp_boundary = [-1, 0]
             for idx,scale in enumerate(original_list):
                 
                 left = scale
@@ -120,28 +120,48 @@ class log_Pattering:
             self.n_log[idx]=f_log_n
         self.boundary_dict = boundary_dict
     
-    def multi_transform(self,data_list):
+    def multi_transform(self,data_list, is_tqdm=True):
         array_ = np.array(data_list)
         arrayT = array_.T
         
-        for idx,data in tqdm(enumerate(arrayT),total=23):
-            if idx in self.ignore_idx:
-                data = data.astype(int)
-                if idx == 0:
-                    signature_array = np.array([chr(x + 65).zfill(2) for x in data])
-                    continue
+        if is_tqdm:
+            for idx,data in tqdm(enumerate(arrayT),total=23):
+                if idx in self.ignore_idx:
+                    data = data.astype(int)
+                    if idx == 0:
+                        signature_array = np.array([chr(x + 65).zfill(2) for x in data])
+                        continue
+                    else:
+                        result_array = np.array([chr(x + 65).zfill(2) for x in data])
+                        
                 else:
-                    result_array = np.array([chr(x + 65).zfill(2) for x in data])
                     
-            else:
-                
-                bins_ = np.digitize(data,self.boundary_dict[idx],right=True).astype(int)
-                result_array = np.array([f'{x // 26}{chr(x % 26 + 65)}' for x in bins_])
+                    bins_ = np.digitize(data,self.boundary_dict[idx],right=True).astype(int)
+                    result_array = np.array([f'{x // 26}{chr(x % 26 + 65)}' for x in bins_])
 
-            signature_array = np.vstack([signature_array, result_array]) 
+                signature_array = np.vstack([signature_array, result_array]) 
+            
+            quan_data = [''.join(col) for col in signature_array.T]
         
-        quan_data = [''.join(col) for col in signature_array.T]
-        
+        else:
+            for idx,data in enumerate(arrayT):
+                if idx in self.ignore_idx:
+                    data = data.astype(int)
+                    if idx == 0:
+                        signature_array = np.array([chr(x + 65).zfill(2) for x in data])
+                        continue
+                    else:
+                        result_array = np.array([chr(x + 65).zfill(2) for x in data])
+                        
+                else:
+                    
+                    bins_ = np.digitize(data,self.boundary_dict[idx],right=True).astype(int)
+                    result_array = np.array([f'{x // 26}{chr(x % 26 + 65)}' for x in bins_])
+
+                signature_array = np.vstack([signature_array, result_array]) 
+            
+            quan_data = [''.join(col) for col in signature_array.T]
+
         return quan_data
 
 
