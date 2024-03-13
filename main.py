@@ -13,8 +13,9 @@ import global_
 from utils import *
 from profiling import b_profiling
 import traceback
+from test import test_live, test_no_live
 
-def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count):
+def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count, live):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
@@ -35,15 +36,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     b_profiling(train_path, "train", parameter, min_data, dataset_path, ignore_background)
     print("Profiling 끝")
 
-    print("test profiling 시작")
-    b_profiling(test_path, "test", parameter, min_data, dataset_path, ignore_background)
-    print("Test 끝")
-
     train_raw = []
     train_key = []
-
-    test_raw = []
-    test_key = []
 
     #데이터 불러오기
     folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
@@ -63,26 +57,11 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         with open(file, 'rb') as f:
             train_key += pickle.load(f)
 
-    # 'test_feature'로 시작하는 모든 파일 찾기
-    test_ffiles = glob.glob(os.path.join(folder, 'test_feature*'))
-    test_ffiles.sort()
-    for file in test_ffiles:
-        with open(file, 'rb') as f:
-            test_raw += pickle.load(f)
-    
-    # 'test_key'로 시작하는 모든 파일 찾기
-    test_kfiles = glob.glob(os.path.join(folder, 'test_key*'))
-    test_kfiles.sort()
-    for file in test_kfiles:
-        with open(file, 'rb') as f:
-            test_key += pickle.load(f)
-
 
     if using_quan =='log' and not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
-    # GMM 이름
-    # dp_GMM = f"n({n_components})_atk({attack})_conf({confidence})_sepIP({separate_attackIP})_cf({change_feature})_mm({using_minmax})_GMM.pkl"
+    # log 이름
     dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_{count}c_log.pkl"
 
     # GMM 생성 부분
@@ -113,8 +92,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     # test_raw[:, 17] = 0
     # test_raw[:, 22] = 0
 
-
-    # if using_quan=='log':
     #     if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
     #         with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'rb') as f:
     #             train_data = pickle.load(f)
@@ -124,8 +101,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
                 
     #else:
     train_data = pattern_model.multi_transform(train_raw)
-    test_data = pattern_model.multi_transform(test_raw)
-    
+
     parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
     
     
@@ -134,7 +110,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
 
         train_src = []
-        test_src = []
         # 'train_feature'으로 시작하는 모든 파일 찾기
         train_ffiles_src = glob.glob(os.path.join(folder, 'train_srcflag*'))
         train_ffiles_src.sort()
@@ -144,20 +119,12 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         print("src : ", len(train_src))
         train_data = [f"{train}{src}" for train, src in zip(train_data, train_src)]
     
-        test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
-        test_ffiles_src.sort()
-        for file in test_ffiles_src:
-            with open(file, 'rb') as f:
-                test_src += pickle.load(f)
-
-        test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
+        
 
     if count_prot:
         #데이터 불러오기
         folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
-
         train_prot = []
-        test_prot = []
         
         # 'train_feature'으로 시작하는 모든 파일 찾기
         train_ffiles_prt = glob.glob(os.path.join(folder, 'train_protflag_*'))
@@ -168,13 +135,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         print("prot : ", len(train_prot))
         train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
 
-        test_ffiles_prt = glob.glob(os.path.join(folder, 'test_protflag_*'))
-        test_ffiles_prt.sort()
-        for file in test_ffiles_prt:
-            with open(file, 'rb') as f:
-                test_prot += pickle.load(f)
-
-        test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
 
     if using_quan == 'log':
         parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
@@ -190,24 +150,12 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
-    with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(test_data,f)
+
+    file_name = f"log({logN})-as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}_c{count}.csv"
+    save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
     
     print(len(train_data))
-    
-    train_multi_dict, train_label, attack_quantization_multi_set = make_quantization_dict(train_data, train_key)    
-    
-    with open(f"./debug_data/{dataset_path}/{parameter}/train_multi_dict_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(train_multi_dict,f)
-    
-    if train_window and real_time:
-        train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
-        
-    test_multi_dict,test_label = make_quantization_test_dict(test_data, test_key)
-    
-    with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
-        pickle.dump(test_multi_dict,f)
-    
+
     if not os.path.isdir(f'./result'):
         os.mkdir(f'./result')
 
@@ -217,22 +165,23 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     # evaluate
     print("평가 시작")
 
-    # if using_quan == 'gmm':
-    #     file_name = f"GMM_as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-n({n_components})-atk({attack})-conf({confidence})_window({train_window}-{test_window})_mm({using_minmax})_vic({add_victim}).csv"
-    if using_quan == 'log':
-        file_name = f"log({logN})-as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}__c{count}.csv"
-
-    save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
+    if live:
+        train_multi_dict, train_label = make_quantization_dict_live_test(train_data, train_key)    
+        test_live(save_file, test_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label)
     
-    if real_time:
-        evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file)
     else:
-        evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file)
+        if train_window and real_time:
+            train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
+        else:
+            train_multi_dict, train_label, attack_quan_set = make_quantization_dict(train_data, train_key)
+    
+        test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, pattern_model, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set)
+
 
 if __name__ == "__main__":
     min_data = 10
     change_feature = False
-    seperate_attackIP = True
+    seperate_attackIP = False
     count_prot = False
     using_minmax = True
     add_src = True
@@ -241,14 +190,15 @@ if __name__ == "__main__":
     train_window = 0
     test_window = 10
     p0 = 0.9
-    logN = "MTA check"
+    logN = "test testcode"
     using_quan = 'log'
-    count = 18 # 8은 10000이하 제거
+    count = 111 # 8은 10000이하 제거
+    live = True
 
     try:
         for data in ['CTU-CIC-micro-final']:
             for ignore_background  in [True]:
-                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count)
+                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live)
 
     except:
         error_info = traceback.format_exc()

@@ -92,6 +92,7 @@ def make_quantization_dict_window(train_data, train_key, train_window):
             train_label[target_ip].add(label)
     
     return train_multi_dict, train_label
+
 def make_quantization_dict_window_notreal(train_data, train_key, train_window):
     train_label = {}
     train_multi_dict = {}
@@ -145,6 +146,23 @@ def make_quantization_dict_window_notreal(train_data, train_key, train_window):
             train_label[target_ip].add(label)
     
     return train_multi_dict, train_label
+
+def make_quantization_dict_live_test(train_data, train_key):
+    train_label = defaultdict(set)
+    train_multi_dict = defaultdict(dict)
+
+    for idx, key in enumerate(tqdm(train_key)):
+        label, tmp_key, file = key.split('+')
+        target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
+        if ('BENIGN' not in label) and ("BACKGROUND" not in label):
+            if train_data[idx] not in train_multi_dict[target_ip]:
+                train_multi_dict[target_ip][train_data[idx]] = 0
+            train_multi_dict[target_ip][train_data[idx]] += 1
+                    
+        train_label[target_ip].add(label)
+
+    return train_multi_dict, train_label
+
 def make_quantization_dict(train_data, train_key):
     train_label = {}
     train_multi_dict = {}
@@ -223,111 +241,9 @@ def build_inverted_index(pattern_dict):
             inverted_index[word].add(key)
     return inverted_index
 
-def evaluate_realtime(train_multi_dict, train_label, test_data, test_key, save_file): # train window 로 train split여부 결정 가능 
-
-    def check_train_label(i):
-        for label in train_label[i]:
-            if ('BENIGN' not in label) and ("BACKGROUND" not in label):
-                return label
-
-    train_counter = dict()
-    train_window = global_.train_window
-    if train_window:
-        train_counter = train_multi_dict
-    else:
-        for train_ip in train_multi_dict.keys():
-            train_counter[train_ip] = Counter(train_multi_dict[train_ip])
-    
-    test_multi_dict = dict()
-    test_label_dict = dict()
-    test_max_sum_dict = dict()
-    test_sum_dict = dict()
-    test_count_dict = dict()
-    test_max_dict = dict()
-    
-    for idx,key in tqdm(enumerate(test_key), total=len(test_key)):
-        label,ip,file = key.split("+")
-        
-        key_ = f'{ip}_{file}'
-        sig = test_data[idx]
-        
-        if key_ not in test_multi_dict: # test window list 생성 
-            test_multi_dict[key_] = deque([])
-            test_count_dict[key_] = dict()
-            test_max_sum_dict[key_] = 0
-            test_sum_dict[key_] = dict()
-            test_max_dict[key_] = 0
-            
-        test_multi_dict[key_].append(sig)
-        
-        if sig not in test_count_dict[key_]: #test count dict 생성 
-            test_count_dict[key_][sig]=0
-        test_count_dict[key_][sig] += 1
-        
-        if key_ not in test_label_dict: #test label dict 생성 
-            test_label_dict[key_] = label
-        elif ('BENIGN' not in label) and ("BACKGROUND" not in label):
-            test_label_dict[key_]=label
-        
-        if len(test_multi_dict[key_])==global_.test_window: # case1. 처음 10개 유사도 계산 
-            sig_list = test_multi_dict[key_]
-
-            for train_ip in train_counter.keys():
-                sum_ = 0
-                if train_ip not in test_sum_dict[key_]:
-                    test_sum_dict[key_][train_ip]=0
-                
-                for s in set(sig_list):
-                    if s in train_counter[train_ip]:
-                        sum_ += min(sig_list.count(s),train_counter[train_ip][s])
-                test_sum_dict[key_][train_ip] = sum_
-
-                if  sum_ > test_max_sum_dict[key_]:
-                    test_max_dict[key_] = train_ip
-                    test_max_sum_dict[key_]= sum_
-
-        elif len(test_multi_dict[key_])>global_.test_window:
-            
-            out_ = test_multi_dict[key_].popleft()
-            test_count_dict[key_][out_] -= 1
-
-            for train_ip in train_counter.keys():
-                    
-                sum_ = test_sum_dict[key_][train_ip]
-
-                if out_ != sig:
-                    if (out_ in train_counter[train_ip]) and (test_count_dict[key_][out_] < train_counter[train_ip][out_]):
-                        sum_ -= 1
-                    if (sig in train_counter[train_ip]) and (test_count_dict[key_][sig] <= train_counter[train_ip][sig]):
-                        sum_ += 1
-
-                test_sum_dict[key_][train_ip] = sum_
-
-                if  sum_ > test_max_sum_dict[key_]:
-                    test_max_dict[key_] = train_ip
-                    test_max_sum_dict[key_]= sum_
-
-            if test_count_dict[key_][out_] == 0:
-                del test_count_dict[key_][out_]
-
-    denominator = global_.test_window
-    with open(f"{save_file}", "w", newline='', encoding='utf-8') as f:
-        wr = csv.writer(f)
-        wr.writerow(["Test IP", "Test IP Label", "Max IP", "Max IP Label", "Max Sim"])
-
-        for ip in test_multi_dict.keys():
-            max_ip = test_max_dict[ip]
-            
-            if max_ip == 0:
-                wr.writerow([test_label_dict[ip] + '_' + ip, test_label_dict[ip], '-', '-' , '-'])
-            else:
-                max_ip2 = max_ip
-                if len(max_ip.split("_"))==2:
-                    max_ip2 = max_ip.split("_")[0]
-                wr.writerow([test_label_dict[ip] + '_' + ip, test_label_dict[ip], max_ip2, check_train_label(max_ip), test_max_sum_dict[ip]/denominator])
 
 def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file):
-    
+    print("?????????????")
     def check_train_label(i):
         label_set = set()
         for ip_ in i:
@@ -412,6 +328,8 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
                 for test_block in test_list_n:
                     if check_sig(test_block,test_sig):
                         for train_ip in relevant_indices:
+                            if ip == '_'.join(train_ip.split('_')[1:]):
+                                continue
                             tmp = '_'.join(train_ip.split('_')[1:])
                             
                             if ip == tmp:
