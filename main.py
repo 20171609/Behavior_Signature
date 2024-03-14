@@ -21,7 +21,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
     global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax,n_ip_flow)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
+    parameter = f"cf({change_feature})_if({n_ip_flow})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -62,7 +62,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
     # log 이름
-    dp_log = f"log_n({n_components})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_{count}c_log.pkl"
+    dp_log = f"log_n({n_components})_if({n_ip_flow})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_{count}c_log.pkl"
 
     # GMM 생성 부분
     if using_quan =='log':
@@ -102,7 +102,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     #else:
     train_data = pattern_model.multi_transform(train_raw)
 
-    parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
+    parameter = f"cf({change_feature})_if({n_ip_flow})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
     
     
     if add_src:
@@ -151,7 +151,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
 
-    file_name = f"log({logN})-as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}_c{count}.csv"
+    file_name = f"log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}_c{count}.csv"
     save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
     
     print(len(train_data))
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     n_ip_flow = 200 
 
     try:
-        for data in ['All-iot23']:
+        for data in ['']:
             for ignore_background  in [True]:
                 main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live, n_ip_flow)
 
