@@ -15,11 +15,11 @@ from profiling import b_profiling
 import traceback
 from test import test_live, test_no_live
 
-def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count, live):
+def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count, live,n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
 
-    global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax)
+    global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax,n_ip_flow)
 
     parameter = f"cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
 
@@ -194,11 +194,12 @@ if __name__ == "__main__":
     using_quan = 'log'
     count = 111 # 8은 10000이하 제거
     live = True
+    n_ip_flow = 200 
 
     try:
-        for data in ['CTU-CIC-micro-final']:
+        for data in ['All-iot23']:
             for ignore_background  in [True]:
-                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live)
+                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
