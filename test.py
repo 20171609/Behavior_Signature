@@ -8,6 +8,7 @@ import csv
 from profiling import b_profiling
 import glob
 import pickle
+import gc
 
 def profiling(flow_list, target_ip):
     profile_key = target_ip
@@ -195,11 +196,11 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                             
                             if train_ip not in compare_dict[target_ip]:
                                 compare_dict[target_ip][train_ip] = 0
-
+                        
                             if tmp in signatures:
                                 if num_signature[target_ip][tmp] <= signatures[tmp]:
                                     compare_dict[target_ip][train_ip] += 1
-
+                            
                             if now in signatures:
                                 if num_signature[target_ip][now] < signatures[now]:
                                     compare_dict[target_ip][train_ip] -= 1
@@ -239,6 +240,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 ## train 부분 시그니처 Counter로 만들기
                 ## train 라벨 가져오는 코드 작성하기
                 ## test 라벨 생성하는 함수로 작성하기
+        gc.collect()
 
 
 def test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, log, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set):
@@ -293,7 +295,7 @@ def test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore
 
     # with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
     #     pickle.dump(test_data,f)
-        
+    
     test_multi_dict, test_label = make_quantization_test_dict(test_data, test_key)
     
     # with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
