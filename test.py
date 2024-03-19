@@ -141,6 +141,9 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         for i, feature in enumerate(feature_list):
                             tmp.append(feature_func_map[feature](profile))
                         
+                        for i in range(8, 13):
+                            tmp[i] = 0
+                        
                         src_flag = sum(flow_stack[target_ip]['srcflag'])
 
                         #if global_.count_prot:

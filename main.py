@@ -79,13 +79,10 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
     
 
-    # train_raw = np.array(train_raw)
+    train_raw = np.array(train_raw)
     # test_raw = np.array(test_raw)
 
-    # train_raw[:, 7] = 0
-    # train_raw[:,12] = 0
-    # train_raw[:, 17] = 0
-    # train_raw[:, 22] = 0
+    train_raw[:, 8:13] = 0
     
     # test_raw[:, 7] = 0
     # test_raw[:,12] = 0
@@ -190,14 +187,14 @@ if __name__ == "__main__":
     train_window = 0
     test_window = 10
     p0 = 0.9
-    logN = "test testcode"
+    logN = "std check"
     using_quan = 'log'
-    count = 111 # 8은 10000이하 제거
+    count = 115 # 8은 10000이하 제거
     live = True
-    n_ip_flow = 200 
+    n_ip_flow = 3000
 
     try:
-        for data in ['']:
+        for data in ['CICIDS2018']:
             for ignore_background  in [True]:
                 main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live, n_ip_flow)
 
