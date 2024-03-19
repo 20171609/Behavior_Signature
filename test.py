@@ -34,6 +34,17 @@ def add_flow(flow: list, target_ip):
         attr_dict[attr] = flow[global_.column_index[column]]
     return attr_dict
 
+def make_remain_label(tmp):
+    tmp = set(tmp)
+
+    if len(tmp) == 1:
+        return tmp.pop()
+
+    else:
+        for t in tmp:
+            if t.upper() != 'BENIGN':
+                return t
+
 def find_label(label_dict, ip_list):
     label_set = set()
     
@@ -224,6 +235,9 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         flow_stack[target_ip]['flow'].popleft()
                         flow_stack[target_ip]['label'].popleft()
 
+        # profile이 생성되지 않은 데이터에 대해서 채점하기 위한 코드
+        remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
+
         file_exists = os.path.isfile(save_path) and os.path.getsize(save_path) > 0
         # csv 적을 때 test IP에 file name 넣기
         with open(f"{save_path}", "a", newline='', encoding='utf-8') as f:
@@ -243,6 +257,10 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 ## train 부분 시그니처 Counter로 만들기
                 ## train 라벨 가져오는 코드 작성하기
                 ## test 라벨 생성하는 함수로 작성하기
+                    
+            for remain_ip in remain_ip_set:
+                wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[target_ip]['label']), '-', 'BENIGN', -1])
+
         gc.collect()
 
 

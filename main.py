@@ -187,14 +187,14 @@ if __name__ == "__main__":
     train_window = 0
     test_window = 10
     p0 = 0.9
-    logN = "std check"
+    logN = "std 빼기-all-test"
     using_quan = 'log'
-    count = 115 # 8은 10000이하 제거
+    count = 11 # 8은 10000이하 제거
     live = True
     n_ip_flow = 3000
 
     try:
-        for data in ['CICIDS2018']:
+        for data in ['CTU-13']:
             for ignore_background  in [True]:
                 main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live, n_ip_flow)
 
