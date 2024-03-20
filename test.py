@@ -152,8 +152,9 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         for i, feature in enumerate(feature_list):
                             tmp.append(feature_func_map[feature](profile))
                         
-                        for i in range(8, 13):
-                            tmp[i] = 0
+                        # 표준편차 제거
+                        # for i in range(8, 13):
+                        #    tmp[i] = 0
                         
                         src_flag = sum(flow_stack[target_ip]['srcflag'])
 
@@ -236,7 +237,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         flow_stack[target_ip]['label'].popleft()
 
         # profile이 생성되지 않은 데이터에 대해서 채점하기 위한 코드
-        remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
+        # remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
 
         file_exists = os.path.isfile(save_path) and os.path.getsize(save_path) > 0
         # csv 적을 때 test IP에 file name 넣기
@@ -258,10 +259,16 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 ## train 라벨 가져오는 코드 작성하기
                 ## test 라벨 생성하는 함수로 작성하기
                     
-            for remain_ip in remain_ip_set:
-                wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[target_ip]['label']), '-', 'BENIGN', -1])
+            # for remain_ip in remain_ip_set:
+            #     wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[target_ip]['label']), '-', 'BENIGN', -1])
 
-        gc.collect()
+        del pred_dict
+        del score_dict
+        del compare_dict
+        del sequence
+        del num_signature
+        del label_dict
+        del max_train_ip
 
 
 def test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, log, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set):

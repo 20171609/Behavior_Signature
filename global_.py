@@ -53,16 +53,16 @@ def initialize(path, change_feature_, attack_, separate_attackIP_, count_prot_, 
             lambda x: np.mean(x['opposite_bytes']),
         'avg_dur':
             lambda x: np.mean(x['duration']),
-        'std_target_pkts':
-            lambda x: np.std(x['target_pkts']) if not change_feature else np.std(x['target_pkts']) + np.mean(x['target_pkts']),
-        'std_opposite_pkts':
-            lambda x: np.std(x['opposite_pkts']) if not change_feature else np.std(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
-        'std_target_bytes':
-            lambda x: np.std(x['target_bytes']) if not change_feature else np.std(x['target_bytes']) + np.mean(x['target_bytes']),
-        'std_opposite_bytes':
-            lambda x: np.std(x['opposite_bytes']) if not change_feature else np.std(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
-        'std_dur':
-            lambda x: np.std(x['duration']) if not change_feature else np.std(x['duration']) + np.mean(x['duration']),
+        'var_target_pkts':
+            lambda x: np.var(x['target_pkts']) if not change_feature else np.var(x['target_pkts']) + np.mean(x['target_pkts']),
+        'var_opposite_pkts':
+            lambda x: np.var(x['opposite_pkts']) if not change_feature else np.var(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
+        'var_target_bytes':
+            lambda x: np.var(x['target_bytes']) if not change_feature else np.var(x['target_bytes']) + np.mean(x['target_bytes']),
+        'var_opposite_bytes':
+            lambda x: np.var(x['opposite_bytes']) if not change_feature else np.var(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
+        'var_dur':
+            lambda x: np.var(x['duration']) if not change_feature else np.var(x['duration']) + np.mean(x['duration']),
         'max_target_pkts':
             lambda x: np.max(x['target_pkts']),
         'max_opposite_pkts':
@@ -101,16 +101,16 @@ def initialize(path, change_feature_, attack_, separate_attackIP_, count_prot_, 
             lambda x: np.mean(x['opposite_bytes']),
         'avg_dur':
             lambda x: np.mean(x['duration']),
-        'std_target_pkts':
-            lambda x: np.std(x['target_pkts']) if not change_feature else np.std(x['target_pkts']) + np.mean(x['target_pkts']),
-        'std_opposite_pkts':
-            lambda x: np.std(x['opposite_pkts']) if not change_feature else np.std(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
-        'std_target_bytes':
-            lambda x: np.std(x['target_bytes']) if not change_feature else np.std(x['target_bytes']) + np.mean(x['target_bytes']),
-        'std_opposite_bytes':
-            lambda x: np.std(x['opposite_bytes']) if not change_feature else np.std(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
-        'std_dur':
-            lambda x: np.std(x['duration']) if not change_feature else np.std(x['duration']) + np.mean(x['duration'])
+        'var_target_pkts':
+            lambda x: np.var(x['target_pkts']) if not change_feature else np.var(x['target_pkts']) + np.mean(x['target_pkts']),
+        'var_opposite_pkts':
+            lambda x: np.var(x['opposite_pkts']) if not change_feature else np.var(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
+        'var_target_bytes':
+            lambda x: np.var(x['target_bytes']) if not change_feature else np.var(x['target_bytes']) + np.mean(x['target_bytes']),
+        'var_opposite_bytes':
+            lambda x: np.var(x['opposite_bytes']) if not change_feature else np.var(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
+        'var_dur':
+            lambda x: np.var(x['duration']) if not change_feature else np.var(x['duration']) + np.mean(x['duration'])
     }
 
 def change_col(path):
