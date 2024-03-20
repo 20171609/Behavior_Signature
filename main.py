@@ -82,8 +82,10 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     train_raw = np.array(train_raw)
     # test_raw = np.array(test_raw)
 
-    train_raw[:, 8:13] = 0
+    # 표준편차
+    #train_raw[:, 8:13] = 0
     
+    # duration관련
     # test_raw[:, 7] = 0
     # test_raw[:,12] = 0
     # test_raw[:, 17] = 0
@@ -176,7 +178,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
 
 if __name__ == "__main__":
-    min_data = 10
+    min_data = 5
     change_feature = False
     seperate_attackIP = False
     count_prot = False
@@ -187,14 +189,14 @@ if __name__ == "__main__":
     train_window = 0
     test_window = 10
     p0 = 0.9
-    logN = "std 빼기-all-test"
+    logN = "var 넣기"
     using_quan = 'log'
-    count = 11 # 8은 10000이하 제거
+    count = 7777 # 8은 10000이하 제거
     live = True
     n_ip_flow = 3000
 
     try:
-        for data in ['CTU-13']:
+        for data in ['MTA-6month']:
             for ignore_background  in [True]:
                 main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live, n_ip_flow)
 
