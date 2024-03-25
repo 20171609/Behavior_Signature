@@ -70,7 +70,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
         num_signature = defaultdict(dict)
         label_dict = defaultdict(set)
         max_train_ip = defaultdict(set)
-        
+        done_test_ip = set()
         # 실시간 프로파일링
         # ip별로 10개가 차면 해당 profile을 퀀타이제이션 하기
         # 퀀타이제이션 된 값을 이용해서 각 train IP별 유사도 계산하여 유사도 증가시키기
@@ -104,6 +104,8 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 sip, dip = flow[column_index['source']], flow[column_index['destination']]
                 
                 for target_ip in [sip, dip]:
+                    if target_ip in done_test_ip:
+                        continue
                     if target_ip not in score_dict:
                         score_dict[target_ip] = 0
                         
@@ -229,6 +231,16 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                             
                             if compare_dict[target_ip][train_ip] == global_.test_window:
                                 max_train_ip[target_ip].add(train_ip)
+                                test_label = find_label(label_dict, [target_ip])
+                                train_label_set = find_label(train_label, pred_dict[target_ip])
+                                for label1 in test_label:
+                                    if label1 == 'BENIGN':
+                                        continue
+                                    else:
+                                        if label1 in train_label_set:
+                                            done_test_ip.add(target_ip)
+                                    
+                                
                         
                         flow_stack[target_ip]['srcflag'].popleft()
                         flow_stack[target_ip]['protCount'].popleft()
@@ -237,7 +249,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         flow_stack[target_ip]['label'].popleft()
 
         # profile이 생성되지 않은 데이터에 대해서 채점하기 위한 코드
-        remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
+        #remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
 
         file_exists = os.path.isfile(save_path) and os.path.getsize(save_path) > 0
         # csv 적을 때 test IP에 file name 넣기
@@ -259,8 +271,8 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 ## train 라벨 가져오는 코드 작성하기
                 ## test 라벨 생성하는 함수로 작성하기
 
-            for remain_ip in remain_ip_set:
-                wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[remain_ip]['label']), '-', 'BENIGN', -1])
+            # for remain_ip in remain_ip_set:
+            #     wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[remain_ip]['label']), '-', 'BENIGN', -1])
 
         del pred_dict
         del score_dict
