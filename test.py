@@ -9,6 +9,7 @@ from profiling import b_profiling
 import glob
 import pickle
 import gc
+import pandas as pd
 
 def profiling(flow_list, target_ip):
     profile_key = target_ip
@@ -58,7 +59,7 @@ def find_label(label_dict, ip_list):
 
     return label_set
 
-def test_live(save_path, data_path, min_data, ignore_background, log, add_src, train_dict, train_label):
+def test_live(save_path, data_path, min_data, ignore_background, log, add_src, train_dict, train_label, benign_test):
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
@@ -81,175 +82,174 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
         file_name = file.split('\\')[-1].split('.')[0]
         print(file_name)
 
-        with open(file, 'r', encoding='utf-8') as f:
-            col = f.readline().strip().split(',')
-            column_index = {i : idx for idx, i in enumerate(col)}
-            csv_data = f.readlines()
+        df = pd.read_csv(file)
+        df['src_port'].fillna("-1", inplace=True)
+        df['dst_port'].fillna("-1", inplace=True)
 
-            for idx, tmp_flow in enumerate(tqdm(csv_data)):
-                flow = tmp_flow.strip().split(',')
-                if flow[0] == '':
+        for idx, flow in tqdm(df.iterrows(), total=len(df)):
+            if flow['source'] == '':
+                continue
+
+            if ignore_background:
+                if flow['Label'].upper() == 'BACKGROUND':
                     continue
 
-                if ignore_background:
-                    if flow[column_index['Label']].upper() == 'BACKGROUND':
+            # if flow['src_port'] == '':
+            #     flow['src_port'] = "-1"
+
+            # if flow['dst_port'] == '':
+            #     flow['dst_port'] = "-1"
+
+            sip, dip = flow['source'], flow['destination']
+            
+            for target_ip in [sip, dip]:
+                if benign_test:
+                    if '*' in target_ip:
                         continue
-
-                if flow[column_index['src_port']] == '':
-                    flow[column_index['src_port']] = "-1"
-
-                if flow[column_index['dst_port']] == '':
-                    flow[column_index['dst_port']] = "-1"
-
-                sip, dip = flow[column_index['source']], flow[column_index['destination']]
+                if target_ip in done_test_ip:
+                    continue
+                if target_ip not in score_dict:
+                    score_dict[target_ip] = 0
+                    
+                check_star = False
                 
-                for target_ip in [sip, dip]:
-                    if target_ip in done_test_ip:
-                        continue
-                    if target_ip not in score_dict:
-                        score_dict[target_ip] = 0
-                        
-                    check_star = False
+                if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
+                    check_star = True
+                    target_ip = target_ip.replace('*','')
+                if target_ip not in flow_stack:
+                    flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([]), 'total_src' : 0}
+
+
+                if "*" in target_ip.split('_')[0]:
+                    flow_stack[target_ip]['label'].append(flow['Label'].upper())
+                    label_dict[target_ip].add(flow['Label'].upper())
+                elif check_star:
+                    flow_stack[target_ip]['label'].append(flow['Label'].upper())
+                    label_dict[target_ip].add(flow['Label'].upper())
+                else:
+                    if 'BENIGN' not in flow['Label'].upper() and 'BACKGROUND' not in flow['Label'].upper():
+                        flow_stack[target_ip]['label'].append('BENIGN')
+                        label_dict[target_ip].add('BENIGN')
                     
-                    if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
-                        check_star = True
-                        target_ip = target_ip.replace('*','')
-                    if target_ip not in flow_stack:
-                        flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([])}
-
-
-                    if "*" in target_ip.split('_')[0]:
-                        flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
-                        label_dict[target_ip].add(flow[column_index['Label']].upper())
-                    elif check_star:
-                        flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
-                        label_dict[target_ip].add(flow[column_index['Label']].upper())
                     else:
-                        if 'BENIGN' not in flow[column_index['Label']].upper() and 'BACKGROUND' not in flow[column_index['Label']].upper():
-                            flow_stack[target_ip]['label'].append('BENIGN')
-                            label_dict[target_ip].add('BENIGN')
-                        
-                        else:
-                            flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
-                            label_dict[target_ip].add(flow[column_index['Label']].upper())
+                        flow_stack[target_ip]['label'].append(flow['Label'].upper())
+                        label_dict[target_ip].add(flow['Label'].upper())
 
-                    #if not global_.change_src:
-                    if global_.separate_attackIP:
-                        sip = sip.replace('*', '')
-                    if target_ip.split('_')[0] == sip:
-                        flow_stack[target_ip]['srcflag'].append(1)
-                    else:
-                        flow_stack[target_ip]['srcflag'].append(0)
+                #if not global_.change_src:
+                if global_.separate_attackIP:
+                    sip = sip.replace('*', '')
+                if target_ip.split('_')[0] == sip:
+                    flow_stack[target_ip]['srcflag'].append(1)
+                    flow_stack[target_ip]['total_src'] += 1
+                else:
+                    flow_stack[target_ip]['srcflag'].append(0)
+                    flow_stack[target_ip]['total_src'] += 0
 
-                    #if global_.count_prot:
-                    flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
+                #if global_.count_prot:
+                # flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
+                
+                flow_stack[target_ip]['flow'].append(flow)
+
+                if len(flow_stack[target_ip]['flow']) == min_data:
+                    profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip)
+
+                    tmp = []
+
+                    for i, feature in enumerate(feature_list):
+                        tmp.append(feature_func_map[feature](profile))
                     
-                    flow_stack[target_ip]['flow'].append(flow)
+                    # 표준편차 제거
+                    # for i in range(8, 13):
+                    #    tmp[i] = 0
 
-                    if len(flow_stack[target_ip]['flow']) == min_data:
-                        profile, profile_key = profiling(flow_stack[target_ip]['flow'], target_ip)
+                    # #if global_.count_prot:
+                    # count_tmp = [0, 0, 0] # tcp, udp, icmp
 
-                        tmp = []
-
-                        for i, feature in enumerate(feature_list):
-                            tmp.append(feature_func_map[feature](profile))
+                    # for p in flow_stack[target_ip]['protCount']:
+                    #     if p.upper() == 'TCP' or p == '6':
+                    #         count_tmp[0] += 1
                         
-                        # 표준편차 제거
-                        # for i in range(8, 13):
-                        #    tmp[i] = 0
+                    #     elif p.upper() == 'UDP' or p == '17':
+                    #         count_tmp[1] += 1
                         
-                        src_flag = sum(flow_stack[target_ip]['srcflag'])
+                    #     elif p.upper() == 'ICMP' or p == '1':
+                    #         count_tmp[2] += 1
 
-                        #if global_.count_prot:
-                        count_tmp = [0, 0, 0] # tcp, udp, icmp
+                    tmp = log.multi_transform([tmp], False)
+                    tmp = tmp[0]
+                    # 여기서 퀀타이제이션 만들기
+                    if add_src:
+                        tmp = f"{tmp}{flow_stack[target_ip]['total_src']}"
 
-                        for p in flow_stack[target_ip]['protCount']:
-                            if p.upper() == 'TCP' or p == '6':
-                                count_tmp[0] += 1
-                            
-                            elif p.upper() == 'UDP' or p == '17':
-                                count_tmp[1] += 1
-                            
-                            elif p.upper() == 'ICMP' or p == '1':
-                                count_tmp[2] += 1
+                    # if global_.count_prot:
+                    #     tmp = f"{tmp}{count_tmp}"
 
-                        tmp = log.multi_transform([tmp], False)
-                        tmp = tmp[0]
-                        # 여기서 퀀타이제이션 만들기
-                        if add_src:
-                            tmp = f"{tmp}{src_flag}"
+                    sequence[target_ip].append(tmp)
 
-                        if global_.count_prot:
-                            tmp = f"{tmp}{count_tmp}"
+                    if tmp not in num_signature[target_ip]:
+                        num_signature[target_ip][tmp] = 0
+                    num_signature[target_ip][tmp] += 1
+                    
+                    now = ''
+                    if len(sequence[target_ip]) > global_.test_window:
+                        now = sequence[target_ip].popleft()
+                        num_signature[target_ip][now] -= 1
 
-                        sequence[target_ip].append(tmp)
-
-                        if tmp not in num_signature[target_ip]:
-                            num_signature[target_ip][tmp] = 0
-                        num_signature[target_ip][tmp] += 1
-                        
-                        now = ''
-                        if len(sequence[target_ip]) > global_.test_window:
-                            now = sequence[target_ip].popleft()
-                            num_signature[target_ip][now] -= 1
-
-                        # 여기서 해당 IP의 유사도 구하기.
-                        # train IP 마다
-                        # 새로 생긴 tmp가 있으면 +1
-                        # 나온 signature가 있으면 -1
-                        # 개수 반영 해야함.
-                        # max값 갱신되면 해당 train ip와 점수 넣기
-                        if now == tmp:
-                            flow_stack[target_ip]['srcflag'].popleft()
-                            flow_stack[target_ip]['protCount'].popleft()
-                            
-                            flow_stack[target_ip]['flow'].popleft()
-                            flow_stack[target_ip]['label'].popleft()
-                            continue
-
-                        for train_ip, signatures in train_dict.items():
-                            if train_ip in max_train_ip[target_ip]:
-                                continue
-                            
-                            if train_ip not in compare_dict[target_ip]:
-                                compare_dict[target_ip][train_ip] = 0
-                        
-                            if tmp in signatures:
-                                if num_signature[target_ip][tmp] <= signatures[tmp]:
-                                    compare_dict[target_ip][train_ip] += 1
-                            
-                            if now in signatures:
-                                if num_signature[target_ip][now] < signatures[now]:
-                                    compare_dict[target_ip][train_ip] -= 1
-
-                            if compare_dict[target_ip][train_ip] > score_dict[target_ip]:
-                                score_dict[target_ip] = compare_dict[target_ip][train_ip]
-                                pred_dict[target_ip] = set([train_ip])
-                            
-                            elif compare_dict[target_ip][train_ip] == score_dict[target_ip]:
-                                pred_dict[target_ip].add(train_ip)
-                            
-                            if compare_dict[target_ip][train_ip] == global_.test_window:
-                                max_train_ip[target_ip].add(train_ip)
-                                test_label = find_label(label_dict, [target_ip])
-                                train_label_set = find_label(train_label, pred_dict[target_ip])
-                                for label1 in test_label:
-                                    if label1 == 'BENIGN':
-                                        continue
-                                    else:
-                                        if label1 in train_label_set:
-                                            done_test_ip.add(target_ip)
-                                    
-                                
-                        
-                        flow_stack[target_ip]['srcflag'].popleft()
-                        flow_stack[target_ip]['protCount'].popleft()
+                    # 여기서 해당 IP의 유사도 구하기.
+                    # train IP 마다
+                    # 새로 생긴 tmp가 있으면 +1
+                    # 나온 signature가 있으면 -1
+                    # 개수 반영 해야함.
+                    # max값 갱신되면 해당 train ip와 점수 넣기
+                    if now == tmp:
+                        flow_stack[target_ip]['total_src'] -= flow_stack[target_ip]['srcflag'].popleft()
+                        # flow_stack[target_ip]['protCount'].popleft()
                         
                         flow_stack[target_ip]['flow'].popleft()
                         flow_stack[target_ip]['label'].popleft()
+                        continue
+
+                    for train_ip, signatures in train_dict.items():
+                        if train_ip in max_train_ip[target_ip]:
+                            continue
+                        
+                        if train_ip not in compare_dict[target_ip]:
+                            compare_dict[target_ip][train_ip] = 0
+                    
+                        if tmp in signatures:
+                            if num_signature[target_ip][tmp] <= signatures[tmp]:
+                                compare_dict[target_ip][train_ip] += 1
+                        
+                        if now in signatures:
+                            if num_signature[target_ip][now] < signatures[now]:
+                                compare_dict[target_ip][train_ip] -= 1
+
+                        if compare_dict[target_ip][train_ip] > score_dict[target_ip]:
+                            score_dict[target_ip] = compare_dict[target_ip][train_ip]
+                            pred_dict[target_ip] = set([train_ip])
+                        
+                        elif compare_dict[target_ip][train_ip] == score_dict[target_ip]:
+                            pred_dict[target_ip].add(train_ip)
+                        
+                        if compare_dict[target_ip][train_ip] == global_.test_window:
+                            max_train_ip[target_ip].add(train_ip)
+                            test_label = find_label(label_dict, [target_ip])
+                            train_label_set = find_label(train_label, pred_dict[target_ip])
+                            for label1 in test_label:
+                                if label1 == 'BENIGN':
+                                    continue
+                                else:
+                                    if label1 in train_label_set:
+                                        done_test_ip.add(target_ip)
+                    
+                    flow_stack[target_ip]['total_src'] -= flow_stack[target_ip]['srcflag'].popleft()
+                    # flow_stack[target_ip]['protCount'].popleft()
+                    
+                    flow_stack[target_ip]['flow'].popleft()
+                    flow_stack[target_ip]['label'].popleft()
 
         # profile이 생성되지 않은 데이터에 대해서 채점하기 위한 코드
-        #remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
+        remain_ip_set = set(flow_stack.keys()) - set(sequence.keys())
 
         file_exists = os.path.isfile(save_path) and os.path.getsize(save_path) > 0
         # csv 적을 때 test IP에 file name 넣기
@@ -271,8 +271,9 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 ## train 라벨 가져오는 코드 작성하기
                 ## test 라벨 생성하는 함수로 작성하기
 
-            # for remain_ip in remain_ip_set:
-            #     wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[remain_ip]['label']), '-', 'BENIGN', -1])
+            for remain_ip in remain_ip_set:
+                if '*' in remain_ip:
+                    wr.writerow([f"{remain_ip}_{file_name}", make_remain_label(flow_stack[remain_ip]['label']), '-', 'BENIGN', -1])
 
         del pred_dict
         del score_dict
@@ -281,6 +282,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
         del num_signature
         del label_dict
         del max_train_ip
+        del df
 
 
 def test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, log, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set):

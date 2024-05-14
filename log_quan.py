@@ -69,7 +69,7 @@ class log_Pattering:
             tmp=1
             i=1
             
-            while(tmp<=max_data):
+            while(tmp<max_data):
                 tmp = logN**i
                 i+=1
                 original_list.append(tmp)
@@ -84,7 +84,7 @@ class log_Pattering:
                 left = scale
                                 
                 if idx==(len_-1):
-                    right = max_data+1    
+                    right = max_data * 1.5
                 else:
                     right = original_list[idx+1]
                 
@@ -123,7 +123,7 @@ class log_Pattering:
     def multi_transform(self,data_list, is_tqdm=True):
         array_ = np.array(data_list)
         arrayT = array_.T
-        
+
         if is_tqdm:
             for idx,data in tqdm(enumerate(arrayT),total=23):
                 if idx in self.ignore_idx:

@@ -17,7 +17,8 @@ from test import test_live, test_no_live
 
 def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count, live,n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
-    test_path = [rf"dataset\{dataset_path}\test\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test'))]
+    test_attack_path = [rf"dataset\{dataset_path}\test_attack\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_attack'))]
+    test_benign_path = [rf"dataset\{dataset_path}\test_benign\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_benign'))]
 
     global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax,n_ip_flow)
 
@@ -56,7 +57,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     for file in train_kfiles:
         with open(file, 'rb') as f:
             train_key += pickle.load(f)
-
 
     if using_quan =='log' and not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
@@ -166,8 +166,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
     if live:
         train_multi_dict, train_label = make_quantization_dict_live_test(train_data, train_key)    
-        test_live(save_file, test_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label)
-    
+        test_live(save_file, test_attack_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
+        test_live(save_file, test_benign_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = True)
     else:
         if train_window and real_time:
             train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
@@ -178,7 +178,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
 
 
 if __name__ == "__main__":
-    min_data = 5
+    min_data = 10
     change_feature = False
     seperate_attackIP = False
     count_prot = False
@@ -189,9 +189,9 @@ if __name__ == "__main__":
     train_window = 0
     test_window = 10
     p0 = 0.9
-    logN = "var 넣기"
+    logN = "MTA" # max 자르기 없앰!
     using_quan = 'log'
-    count = 7777 # 8은 10000이하 제거
+    count =777 # 8은 10000이하 제거
     live = True
     n_ip_flow = 3000
 
