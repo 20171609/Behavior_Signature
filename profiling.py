@@ -12,9 +12,9 @@ class Profile:
 
     attr_typing_map = {
         'target_ip': lambda x: str(x),
-        'target_port': lambda x: int(x, 16) if x.startswith('0x') else int(float(x)),
+        'target_port': lambda x: int(x, 16) if str(x).startswith('0x') else int(float(x)),
         'opposite_ip': lambda x: str(x),
-        'opposite_port': lambda x: int(x, 16) if x.startswith('0x') else int(float(x)),
+        'opposite_port': lambda x: int(x, 16) if str(x).startswith('0x') else int(float(x)),
         'duration': lambda x: float(x),
         'target_pkts': lambda x: int(float(x)),
         'opposite_pkts': lambda x: int(float(x)),
@@ -168,7 +168,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                     else:
                         if 'BENIGN' not in flow[column_index['Label']].upper() and 'BACKGROUND' not in flow[column_index['Label']].upper():
                             flow_stack[target_ip]['label'].append('BENIGN')
-                        
+
                         else:
                             flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
 

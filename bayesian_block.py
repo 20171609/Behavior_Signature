@@ -115,7 +115,7 @@ def make_Bayesian(train_raw, train_key, p0, dp, dataset_path):
     if global_.attack == 1:
         for idx, key in enumerate(train_key):
             if key.split('+')[0].upper() != "BENIGN":
-                    train_attack.append(train_raw[idx])
+                train_attack.append(train_raw[idx])
 
     elif global_.attack == 2:
         for idx, key in enumerate(train_key):
