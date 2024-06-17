@@ -6,7 +6,7 @@ import multiprocessing as mp
 import global_
 from collections import Counter
 import sys
-
+import math 
 class log_Pattering:
     def __init__(self, ignore_idx=[0,1,2], n_log_ = 1.2, n_jobs = 1):
         
@@ -48,6 +48,44 @@ class log_Pattering:
         
         n = len(count_list)
         return entropy/np.log2(n)
+    def make_tmp_boundary(self,original_list,feature_list):
+        data_len = len(feature_list)
+        max_data = max(feature_list)
+        
+        for idx,scale in enumerate(original_list):
+            
+            left = scale
+                            
+            if idx==(data_len-1):
+                right = max_data*1.5
+            else:
+                right = original_list[idx+1]
+            
+            filtered_array = feature_list[(feature_list > left) & (feature_list <= right)]
+
+            if len(filtered_array)==0:
+                if left !=0:
+                    real_boundary.append(right)
+            else:
+                min_freq_value = self.find_min_frequency_value(filtered_array)
+                real_boundary.append(min_freq_value)
+                
+        real_boundary = [-1,0]+ real_boundary
+        return real_boundary   
+     
+    def make_n_bin_boundary(self,bin_n,feature_list):        
+        
+        max_data = max(feature_list)
+        data_len = len(feature_list)
+        #make original_list
+        
+        N_bottom = max_data**(1/bin_n)
+        original_list = [N_bottom**(i) for i in range(1,bin_n+1)]
+        original_list = [0]+original_list
+        #make real_boundary
+        real_boundary = self.make_tmp_boundary(original_list,feature_list)
+        
+        return real_boundary,N_bottom
     
     def make_boundary(self,logN_,feature_list):
         logN_n= logN_
@@ -57,7 +95,7 @@ class log_Pattering:
         #make original_list
         
         Nlog_list = [1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
-        
+        #Nlog_list = [1.5,2,2.5,3.0,3.5,4]
         min_entropy = sys.maxsize
         
         data_len = len(feature_list)
@@ -77,7 +115,6 @@ class log_Pattering:
             len_ = len(original_list)
             
             #make real_boundary
-            
             tmp_boundary = [-1, 0]
             for idx,scale in enumerate(original_list):
                 
@@ -108,7 +145,7 @@ class log_Pattering:
         
         return real_boundary,choice_N
     
-    def multi_fit(self, data):
+    def multi_fit(self, data, use_entropy):
         boundary_dict = dict()
         
         array_ = np.array(data)
@@ -116,8 +153,12 @@ class log_Pattering:
         for idx,feature_data in tqdm(enumerate(arrayT),total = len(arrayT)):
             if idx in self.ignore_idx:
                 continue
-            boundary_dict[idx],f_log_n = self.make_boundary(self.n_log,feature_data)
-            self.n_log[idx]=f_log_n
+            if use_entropy:
+                boundary_dict[idx],f_log_n = self.make_boundary(self.n_log,feature_data)
+                self.n_log[idx]=f_log_n
+            else:
+                boundary_dict[idx],bin_n = self.make_n_bin_boundary(self.n_log,feature_data)
+                self.n_log[idx]=bin_n
         self.boundary_dict = boundary_dict
     
     def multi_transform(self,data_list, is_tqdm=True):
@@ -166,7 +207,7 @@ class log_Pattering:
 
 
     
-def make_log_quan(train_raw, train_key, dataset_path, n_com,dp_log):
+def make_log_quan(train_raw, train_key, dataset_path, n_com, dp_log, use_entropy):
     train_attack = []
     if global_.attack == 1:
         for idx, key in enumerate(train_key):
@@ -180,7 +221,7 @@ def make_log_quan(train_raw, train_key, dataset_path, n_com,dp_log):
         train_attack = train_raw
 
     pattern_log = log_Pattering(ignore_idx=[0, 1, 2], n_log_ = n_com, n_jobs=1)
-    pattern_log.multi_fit(train_attack)
+    pattern_log.multi_fit(train_attack,use_entropy)
 
     with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'wb') as f:
         pickle.dump(pattern_log, f)
