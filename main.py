@@ -67,7 +67,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     
     if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
         print("LOG boundary 생성 해야함")
-        make_log_quan(train_raw, train_key, dataset_path, n_components,dp_log)
+        make_log_quan(train_raw, train_key, dataset_path, n_components,dp_log,using_entropy)
 
     print(f"log n:{n_components} {attack}attack LOG 불러옴")
     
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     
     test_window = 10
-    logN = 128 
+    logN =128
     using_entropy = False
     command = 1 # 
     live = True

@@ -8,10 +8,14 @@ from collections import Counter
 import sys
 import math 
 class log_Pattering:
-    def __init__(self, ignore_idx=[0,1,2], n_log_ = 1.2, n_jobs = 1):
+    def __init__(self, ignore_idx=[0,1,2], n_log_ = 1.2, n_jobs = 1, using_entropy = False):
         
         self.ignore_idx = ignore_idx
-        self.n_log = {}
+        if using_entropy:
+            self.n_log = {}
+        else:
+            self.bin = n_log_
+            self.n_log = {}
         self.boundary_dict = {}
         
     def find_min_frequency_value(self,lst):
@@ -49,14 +53,16 @@ class log_Pattering:
         n = len(count_list)
         return entropy/np.log2(n)
     def make_tmp_boundary(self,original_list,feature_list):
-        data_len = len(feature_list)
-        max_data = max(feature_list)
         
+        max_data = max(feature_list)
+        len_boundary = len(original_list)
+        
+        real_boundary = []
         for idx,scale in enumerate(original_list):
             
             left = scale
                             
-            if idx==(data_len-1):
+            if idx==(len_boundary-1):
                 right = max_data*1.5
             else:
                 right = original_list[idx+1]
@@ -73,12 +79,12 @@ class log_Pattering:
         real_boundary = [-1,0]+ real_boundary
         return real_boundary   
      
-    def make_n_bin_boundary(self,bin_n,feature_list):        
+    def make_n_bin_boundary(self,feature_list):        
         
         max_data = max(feature_list)
-        data_len = len(feature_list)
-        #make original_list
         
+        #make original_list
+        bin_n = self.bin
         N_bottom = max_data**(1/bin_n)
         original_list = [N_bottom**(i) for i in range(1,bin_n+1)]
         original_list = [0]+original_list
@@ -157,7 +163,7 @@ class log_Pattering:
                 boundary_dict[idx],f_log_n = self.make_boundary(self.n_log,feature_data)
                 self.n_log[idx]=f_log_n
             else:
-                boundary_dict[idx],bin_n = self.make_n_bin_boundary(self.n_log,feature_data)
+                boundary_dict[idx],bin_n = self.make_n_bin_boundary(feature_data)
                 self.n_log[idx]=bin_n
         self.boundary_dict = boundary_dict
     
@@ -220,7 +226,7 @@ def make_log_quan(train_raw, train_key, dataset_path, n_com, dp_log, use_entropy
     else: 
         train_attack = train_raw
 
-    pattern_log = log_Pattering(ignore_idx=[0, 1, 2], n_log_ = n_com, n_jobs=1)
+    pattern_log = log_Pattering(ignore_idx=[0, 1, 2], n_log_ = n_com, n_jobs=1, using_entropy = use_entropy)
     pattern_log.multi_fit(train_attack,use_entropy)
 
     with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'wb') as f:
