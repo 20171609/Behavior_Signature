@@ -20,7 +20,7 @@ def profiling(flow_list, target_ip):
 
 def add_flow(flow: list, target_ip):
     target_ip = target_ip.split('_')[0]
-    sip = flow[global_.column_index['source']]
+    sip = flow['source'] #flow[global_.column_index['source']]
     
     attr_map = {}
     if target_ip == sip:
@@ -29,7 +29,7 @@ def add_flow(flow: list, target_ip):
         attr_map = global_.attribute_map_inv
     attr_dict = {}
     for attr, column in attr_map.items():
-        attr_dict[attr] = flow[global_.column_index[column]]
+        attr_dict[attr] = flow[column]#global_.column_index[column]]
     return attr_dict
 
 def make_remain_label(tmp):
