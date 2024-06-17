@@ -15,14 +15,14 @@ from profiling import b_profiling
 import traceback
 from test import test_live, test_no_live
 
-def main(dataset_path, min_data, attack, change_feature, add_src, separate_attackIP, count_prot, train_window, test_window, n_components, real_time, using_minmax, using_quan, p0, ignore_background, count, live,n_ip_flow):
+def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, test_window, n_components, real_time, using_minmax, using_entropy, ignore_background, command, live,n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_attack_path = [rf"dataset\{dataset_path}\test_attack\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_attack'))]
     test_benign_path = [rf"dataset\{dataset_path}\test_benign\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_benign'))]
 
-    global_.initialize(train_path[0], change_feature, attack, separate_attackIP, count_prot, train_window, test_window, using_minmax,n_ip_flow)
+    global_.initialize(train_path[0], change_feature, attack, count_prot, test_window, using_minmax,n_ip_flow)
 
-    parameter = f"cf({change_feature})_if({n_ip_flow})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
+    parameter = f"cf({change_feature})_if({n_ip_flow})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{command}"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -58,32 +58,29 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         with open(file, 'rb') as f:
             train_key += pickle.load(f)
 
-    if using_quan =='log' and not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
+    if not os.path.isdir(f'./preprocessing/{dataset_path}/LOG'):
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
-    # log 이름
-    dp_log = f"log_n({n_components})_if({n_ip_flow})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_sepIP({separate_attackIP})_min({min_data})_{count}c_log.pkl"
+    # log datapath
+    dp_log = f"log_n({n_components})_if({n_ip_flow})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_min({min_data})_{command}c_log.pkl"
 
-    # GMM 생성 부분
-    if using_quan =='log':
-        if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
-            print("LOG boundary 생성 해야함")
-            make_log_quan(train_raw, train_key, dataset_path, n_components,dp_log)
-
-        print(f"log n:{n_components} {attack}attack LOG 불러옴")
-        with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'rb') as f:
-            pattern_model = pickle.load(f)
-
-
-    if using_quan == 'log':
-        parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
     
+    if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
+        print("LOG boundary 생성 해야함")
+        make_log_quan(train_raw, train_key, dataset_path, n_components,dp_log)
+
+    print(f"log n:{n_components} {attack}attack LOG 불러옴")
+    
+    with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'rb') as f:
+        pattern_model = pickle.load(f)
+
+    parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
 
     train_raw = np.array(train_raw)
     # test_raw = np.array(test_raw)
 
     # 표준편차
-    #train_raw[:, 8:13] = 0
+    #train_raw[:, 12] = 0
     
     # duration관련
     # test_raw[:, 7] = 0
@@ -101,7 +98,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     #else:
     train_data = pattern_model.multi_transform(train_raw)
 
-    parameter = f"cf({change_feature})_if({n_ip_flow})_sepIP({separate_attackIP})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{count}"
+    parameter = f"cf({change_feature})_if({n_ip_flow})_n_gram({min_data})_mm({using_minmax})_ib{ignore_background}_c{command}"
     
     
     if add_src:
@@ -135,8 +132,10 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
 
 
-    if using_quan == 'log':
-        parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
+    if using_entropy :
+        parameter += f'_pro({count_prot})_as({add_src})_log_entropy({n_components})'
+    else:
+        parameter += f'_pro({count_prot})_as({add_src})_log_bin({n_components})'
 
     if not os.path.isdir(f"./debug_data"):
         os.mkdir(f"./debug_data")
@@ -150,8 +149,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
 
-    file_name = f"log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-sepIP({separate_attackIP})-min({min_data})-atk({attack})-window({train_window}-{test_window})-mm({using_minmax})_ib{ignore_background}_c{count}.csv"
-    save_file = f"./result/{dataset_path}/{using_quan}_{file_name}.csv"
+    file_name = f"log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})-mm({using_minmax})_ib{ignore_background}_c{count}.csv"
+    save_file = f"./result/{dataset_path}/ent{using_entropy}_{file_name}.csv"
     
     print(len(train_data))
 
@@ -169,39 +168,36 @@ def main(dataset_path, min_data, attack, change_feature, add_src, separate_attac
         test_live(save_file, test_attack_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
         test_live(save_file, test_benign_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = True)
     else:
-        if train_window and real_time:
-            train_multi_dict, train_label = make_quantization_dict_window(train_data, train_key, train_window)
-        else:
-            train_multi_dict, train_label, attack_quan_set = make_quantization_dict(train_data, train_key)
-    
+        train_multi_dict, train_label, attack_quan_set = make_quantization_dict(train_data, train_key)
+        
+    with open(f"./debug_data/{dataset_path}/{parameter}/train_attack_dict{attack}.pkl", 'wb') as f:
+        pickle.dump(train_multi_dict,f)
         test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, pattern_model, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set)
 
 
 if __name__ == "__main__":
-    min_data = 10
-    change_feature = False
-    seperate_attackIP = False
+    min_data = 1
+    change_feature = True
     count_prot = False
     using_minmax = True
     add_src = True
     real_time = 0
     attack = 1 # 0이 정상 1이 공격 2가 혼합
-    train_window = 0
+    
     test_window = 10
-    p0 = 0.9
-    logN = "MTA" # max 자르기 없앰!
-    using_quan = 'log'
-    count =777 # 8은 10000이하 제거
+    logN = 128 
+    using_entropy = False
+    command = 1 # 
     live = True
-    n_ip_flow = 3000
-
+    n_ip_flow = 5000
+    
     try:
-        for data in ['MTA-6month']:
+        for data in ['all-dataset100']:
             for ignore_background  in [True]:
-                main(data, min_data, attack, change_feature, add_src, seperate_attackIP, count_prot, train_window, test_window, logN, real_time, using_minmax, using_quan, p0, ignore_background, count, live, n_ip_flow)
+                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, real_time, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
         with open('log.txt', 'a') as f:
-            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{add_src} add_src-_attackIP-{seperate_attackIP} test에서 에러 발생\n")
+            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{add_src} add_src- test에서 에러 발생\n")
             f.write(f"{error_info}\n\n")
