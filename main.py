@@ -98,7 +98,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     #else:
     train_data = pattern_model.multi_transform(train_raw)
 
-    parameter = f"cf({change_feature})_if({n_ip_flow})_n_gram({min_data})_mm({using_minmax})_ib{ignore_background}_c{command}"
+    parameter = f"cf({change_feature})_if({n_ip_flow})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{command}"
     
     
     if add_src:
