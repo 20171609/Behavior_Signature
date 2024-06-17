@@ -1,6 +1,6 @@
 import numpy as np
 
-def initialize(path, change_feature_, attack_, separate_attackIP_, count_prot_, train_window_,test_window_, using_minmax,n_max_flow_):
+def initialize(path, change_feature_, attack_, count_prot_, test_window_, using_minmax,n_max_flow_):
     global column_index
     
     with open(path, 'r', encoding='utf-8') as f:
@@ -13,25 +13,22 @@ def initialize(path, change_feature_, attack_, separate_attackIP_, count_prot_, 
     global attribute_map_inv
     global feature_func_map
     global attack
-    
-    global separate_attackIP
+
     global change_feature
     global count_prot
-    global train_window
     global test_window
     global n_max_flow
 
     change_feature = change_feature_
     count_prot = count_prot_
-    train_window = train_window_
     test_window = test_window_
     n_max_flow = n_max_flow_ 
     attack = attack_
-    separate_attackIP = separate_attackIP_
+    
     attribute_map = {'target_ip': 'source', 'target_port': 'src_port', 'opposite_ip': 'destination', 'opposite_port': 'dst_port',
                 'duration': 'duration', 'target_pkts': 'out_pkts', 'opposite_pkts': 'in_pkts',
                 'target_bytes': 'out_bytes', 'opposite_bytes': 'in_bytes'}
-
+    
     attribute_map_inv = {'target_ip': 'destination', 'target_port': 'dst_port', 'opposite_ip': 'source', 
                         'opposite_port': 'src_port', 'duration': 'duration', 'target_pkts': 'in_pkts', 
                         'opposite_pkts': 'out_pkts', 'target_bytes': 'in_bytes', 'opposite_bytes': 'out_bytes'} 
