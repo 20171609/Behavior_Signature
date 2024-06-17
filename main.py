@@ -170,10 +170,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     else:
         train_multi_dict, train_label, attack_quan_set = make_quantization_dict(train_data, train_key)
         
-    with open(f"./debug_data/{dataset_path}/{parameter}/train_attack_dict{attack}.pkl", 'wb') as f:
-        pickle.dump(train_multi_dict,f)
-        test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, pattern_model, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set)
-
 
 if __name__ == "__main__":
     min_data = 1

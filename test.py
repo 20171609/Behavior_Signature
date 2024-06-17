@@ -21,10 +21,7 @@ def profiling(flow_list, target_ip):
 def add_flow(flow: list, target_ip):
     target_ip = target_ip.split('_')[0]
     sip = flow[global_.column_index['source']]
-
-    if "*" in sip and global_.separate_attackIP:
-        sip = sip.replace('*','')
-
+    
     attr_map = {}
     if target_ip == sip:
         attr_map = global_.attribute_map
@@ -111,19 +108,11 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 if target_ip not in score_dict:
                     score_dict[target_ip] = 0
                     
-                check_star = False
-                
-                if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
-                    check_star = True
-                    target_ip = target_ip.replace('*','')
                 if target_ip not in flow_stack:
                     flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([]), 'total_src' : 0}
 
 
                 if "*" in target_ip.split('_')[0]:
-                    flow_stack[target_ip]['label'].append(flow['Label'].upper())
-                    label_dict[target_ip].add(flow['Label'].upper())
-                elif check_star:
                     flow_stack[target_ip]['label'].append(flow['Label'].upper())
                     label_dict[target_ip].add(flow['Label'].upper())
                 else:
@@ -135,9 +124,6 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         flow_stack[target_ip]['label'].append(flow['Label'].upper())
                         label_dict[target_ip].add(flow['Label'].upper())
 
-                #if not global_.change_src:
-                if global_.separate_attackIP:
-                    sip = sip.replace('*', '')
                 if target_ip.split('_')[0] == sip:
                     flow_stack[target_ip]['srcflag'].append(1)
                     flow_stack[target_ip]['total_src'] += 1
@@ -160,7 +146,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                     
                     # 표준편차 제거
                     # for i in range(8, 13):
-                    #    tmp[i] = 0
+        
 
                     # #if global_.count_prot:
                     # count_tmp = [0, 0, 0] # tcp, udp, icmp
