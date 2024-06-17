@@ -40,112 +40,6 @@ def check_flow_label(label):
         return label
     return 'BENIGN'
 
-def make_quantization_dict_window(train_data, train_key, train_window):
-    train_label = {}
-    train_multi_dict = {}
-    train_count_dict = {}
-    train_queue_dict = {}
-
-    for idx, key in enumerate(tqdm(train_key)):
-        label, tmp_key, file = key.split('+')
-        target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
-        target_ip_idx = f'{target_ip}_{idx}'
-        data = train_data[idx]
-        
-        if ('BENIGN' not in label) and ("BACKGROUND" not in label):
-            if target_ip_idx not in train_multi_dict: 
-                train_multi_dict[target_ip_idx] = []
-            if target_ip not in train_count_dict:
-                train_count_dict[target_ip] = dict()
-            if target_ip not in train_queue_dict:
-                train_queue_dict[target_ip] = deque()
-
-            if data not in train_count_dict[target_ip]:
-                train_count_dict[target_ip][data]=0 
-            
-            train_count_dict[target_ip][data]+=1    
-            train_queue_dict[target_ip].append(data)
-            
-            if len(train_queue_dict[target_ip]) == train_window:
-                
-                # if train_window <= 10:
-                #     if train_count_dict[target_ip] != train_multi_dict[target_ip_idx]:
-                #         train_multi_dict[target_ip_idx] = train_count_dict[target_ip]
-                # else:
-                train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
-                train_count_dict[target_ip] = dict()
-                train_queue_dict[target_ip] = deque()
-            # elif len(train_queue_dict[target_ip]) > train_window:
-            #     out_ = train_queue_dict[target_ip].popleft()
-            #     train_count_dict[target_ip][out_]-=1
-                
-            #     if train_count_dict[target_ip][out_]==0:
-            #         del train_count_dict[target_ip][out_]
-            #     if data in train_count_dict[target_ip]:
-            #         train_count_dict[target_ip][data]+=1
-            #     else:
-            #         train_count_dict[target_ip][data]=1
-            #     train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
-                
-            if target_ip not in train_label:
-                train_label[target_ip] = set()
-            train_label[target_ip].add(label)
-    
-    return train_multi_dict, train_label
-
-def make_quantization_dict_window_notreal(train_data, train_key, train_window):
-    train_label = {}
-    train_multi_dict = {}
-    train_count_dict = {}
-    train_queue_dict = {}
-  
-
-    for idx, key in enumerate(tqdm(train_key)):
-        label, tmp_key, file = key.split('+')
-        target_ip = f"{label}_{tmp_key.split('_')[0]}_{file}"
-        target_ip_idx = f'{target_ip}_{idx}'
-        data = train_data[idx]
-        
-        if ('BENIGN' not in label) and ("BACKGROUND" not in label):
-            if target_ip_idx not in train_multi_dict: 
-                train_multi_dict[target_ip_idx] = []
-            if target_ip not in train_count_dict:
-                train_count_dict[target_ip] = dict()
-            if target_ip not in train_queue_dict:
-                train_queue_dict[target_ip] = deque()
-
-            if data not in train_count_dict[target_ip]:
-                train_count_dict[target_ip][data]=0 
-            
-            train_count_dict[target_ip][data]+=1    
-            train_queue_dict[target_ip].append(data)
-            
-            if len(train_queue_dict[target_ip]) == train_window:
-                
-                # if train_window <= 10:
-                #     if train_count_dict[target_ip] != train_multi_dict[target_ip_idx]:
-                #         train_multi_dict[target_ip_idx] = train_count_dict[target_ip]
-                # else:
-                train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
-                train_count_dict[target_ip] = dict()
-                train_queue_dict[target_ip] = deque()
-            # elif len(train_queue_dict[target_ip]) > train_window:
-            #     out_ = train_queue_dict[target_ip].popleft()
-            #     train_count_dict[target_ip][out_]-=1
-                
-            #     if train_count_dict[target_ip][out_]==0:
-            #         del train_count_dict[target_ip][out_]
-            #     if data in train_count_dict[target_ip]:
-            #         train_count_dict[target_ip][data]+=1
-            #     else:
-            #         train_count_dict[target_ip][data]=1
-            #     train_multi_dict[target_ip_idx].append(train_count_dict[target_ip])
-                
-            if target_ip not in train_label:
-                train_label[target_ip] = set()
-            train_label[target_ip].add(label)
-    
-    return train_multi_dict, train_label
 
 def make_quantization_dict_live_test(train_data, train_key):
     train_label = defaultdict(set)
@@ -282,14 +176,10 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
     
     multi_inverted_index = build_inverted_index(train_multi_dict)
     
-    if global_.train_window:
-        train_multi_dict_n = dict()
-        for train_ip in train_multi_dict:
-            train_multi_dict_n[train_ip] = n_gram(train_multi_dict[train_ip],global_.train_window)
-    else:
-        train_multi_dict_c = dict()
-        for train_ip in train_multi_dict:
-            train_multi_dict_c[train_ip] = Counter(train_multi_dict[train_ip])
+
+    train_multi_dict_c = dict()
+    for train_ip in train_multi_dict:
+        train_multi_dict_c[train_ip] = Counter(train_multi_dict[train_ip])
     
     with open(f"{save_file}", "w", newline='', encoding='utf-8') as f:
         wr = csv.writer(f)
@@ -310,37 +200,23 @@ def evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_
             max_sim = 0 
             max_ip = set()
                         
-            if global_.train_window:
-                for test_block in (test_list_n):
-                    if check_sig(test_block,test_sig):
-                        test_counter = Counter(test_block)
-                        for train_ip in relevant_indices:
-                            for train_block in train_multi_dict_n[train_ip]:
-                                if check_sig(train_block,test_sig):
-                                    similarity = bag_similarity_counter(train_block, test_counter)
-                                    if max_sim == similarity:
-                                        max_ip.add(train_ip)
-                                    elif max_sim < similarity:
-                                        max_sim =similarity
-                                        max_ip=set([train_ip])
-                                  
-            else:
-                for test_block in test_list_n:
-                    if check_sig(test_block,test_sig):
-                        for train_ip in relevant_indices:
-                            if ip == '_'.join(train_ip.split('_')[1:]):
-                                continue
-                            tmp = '_'.join(train_ip.split('_')[1:])
-                            
-                            if ip == tmp:
-                                continue
-                            similarity = bag_similarity_counter(test_block,train_multi_dict_c[train_ip])
-                            
-                            if max_sim == similarity:
-                                max_ip.add(train_ip)
-                            elif max_sim < similarity:
-                                max_sim =similarity
-                                max_ip=set([train_ip])
+
+            for test_block in test_list_n:
+                if check_sig(test_block,test_sig):
+                    for train_ip in relevant_indices:
+                        if ip == '_'.join(train_ip.split('_')[1:]):
+                            continue
+                        tmp = '_'.join(train_ip.split('_')[1:])
+                        
+                        if ip == tmp:
+                            continue
+                        similarity = bag_similarity_counter(test_block,train_multi_dict_c[train_ip])
+                        
+                        if max_sim == similarity:
+                            max_ip.add(train_ip)
+                        elif max_sim < similarity:
+                            max_sim =similarity
+                            max_ip=set([train_ip])
             if len(max_ip) == 0:
                 wr.writerow([ip, check_test_label(ip), '-', '-' , '-'])
             else:
