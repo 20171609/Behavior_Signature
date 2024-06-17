@@ -78,9 +78,6 @@ def add_flow(flow: list, target_ip):
     target_ip = target_ip.split('_')[0]
     sip = flow[global_.column_index['source']]
 
-    if "*" in sip and global_.separate_attackIP:
-        sip = sip.replace('*','')
-
     attr_map = {}
     if target_ip == sip:
         attr_map = global_.attribute_map
@@ -119,6 +116,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
         with open(file, 'r', encoding='utf-8') as f:
             col = f.readline().strip().split(',')
             column_index = {i : idx for idx, i in enumerate(col)}
+            global_.column_index = column_index
             csv_data = f.readlines()
 
             for idx, tmp_flow in enumerate(tqdm(csv_data)):
@@ -143,14 +141,10 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                 
                 for target_ip in [sip, dip]:
                     
-                    if t == 'train' and '*' not in target_ip:
-                        continue
+                    #if t == 'train' and '*' not in target_ip:
+                    #    continue
                         
-                    check_star = False
                     
-                    if global_.separate_attackIP and "*" in target_ip.split('_')[0]:
-                        check_star = True
-                        target_ip = target_ip.replace('*','')
                     if target_ip not in flow_stack:
                         flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([])}
 
@@ -163,8 +157,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
 
                     if "*" in target_ip.split('_')[0]:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
-                    elif check_star:
-                        flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
+                    
                     else:
                         if 'BENIGN' not in flow[column_index['Label']].upper() and 'BACKGROUND' not in flow[column_index['Label']].upper():
                             flow_stack[target_ip]['label'].append('BENIGN')
@@ -173,8 +166,7 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                             flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
 
                     #if not global_.change_src:
-                    if global_.separate_attackIP:
-                        sip = sip.replace('*', '')
+                    
                     if target_ip.split('_')[0] == sip:
                         flow_stack[target_ip]['srcflag'].append(1)
                     else:
