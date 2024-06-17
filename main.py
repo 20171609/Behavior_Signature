@@ -15,7 +15,7 @@ from profiling import b_profiling
 import traceback
 from test import test_live, test_no_live
 
-def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, test_window, n_components, real_time, using_minmax, using_entropy, ignore_background, command, live,n_ip_flow):
+def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, test_window, n_components, using_minmax, using_entropy, ignore_background, command, live,n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_attack_path = [rf"dataset\{dataset_path}\test_attack\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_attack'))]
     test_benign_path = [rf"dataset\{dataset_path}\test_benign\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_benign'))]
@@ -149,7 +149,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
 
-    file_name = f"log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})-mm({using_minmax})_ib{ignore_background}_c{count}.csv"
+    file_name = f"log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})-mm({using_minmax})_ib{ignore_background}_c{command}.csv"
     save_file = f"./result/{dataset_path}/ent{using_entropy}_{file_name}.csv"
     
     print(len(train_data))
@@ -181,7 +181,6 @@ if __name__ == "__main__":
     count_prot = False
     using_minmax = True
     add_src = True
-    real_time = 0
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     
     test_window = 10
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     try:
         for data in ['all-dataset100']:
             for ignore_background  in [True]:
-                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, real_time, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
+                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
