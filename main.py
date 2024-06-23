@@ -189,9 +189,8 @@ if __name__ == "__main__":
     
     try:
         for data in ['all-dataset100']:
-            for logN in [128]:
-                for ignore_background  in [True]:
-                    main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
+            for ignore_background  in [True]:
+                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
