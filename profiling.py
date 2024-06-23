@@ -140,9 +140,8 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                 sip, dip = flow[column_index['source']], flow[column_index['destination']]
                 
                 for target_ip in [sip, dip]:
-                    
-                    #if t == 'train' and '*' not in target_ip:
-                    #    continue
+                    if t == 'train' and '*' not in target_ip:
+                       continue
                         
                     
                     if target_ip not in flow_stack:
@@ -197,13 +196,13 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
 
                         for p in flow_stack[target_ip]['protCount']:
                             if p.upper() == 'TCP' or p == '6':
-                                count_tmp[0] += 1
+                                count_tmp[0] = 1
                             
                             elif p.upper() == 'UDP' or p == '17':
-                                count_tmp[1] += 1
+                                count_tmp[1] = 1
                             
                             elif p.upper() == 'ICMP' or p == '1':
-                                count_tmp[2] += 1
+                                count_tmp[2] = 1
 
                         profile_protflag.append(count_tmp)
                         flow_stack[target_ip]['protCount'].popleft()
