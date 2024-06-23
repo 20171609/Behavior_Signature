@@ -62,8 +62,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
     # log datapath
-    dp_log = f"log_n({n_components})_if({n_ip_flow})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_min({min_data})_{command}c_log.pkl"
-
+    dp_log = f"entropy({using_entropu})_log_n({n_components})_if({n_ip_flow})_atk({attack})_mm({using_minmax})_ib{ignore_background}_cf({change_feature})_min({min_data})_{command}c_log.pkl"
     
     if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
         print("LOG boundary 생성 해야함")
@@ -149,8 +148,8 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
 
-    file_name = f"log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})-mm({using_minmax})_ib{ignore_background}_c{command}.csv"
-    save_file = f"./result/{dataset_path}/ent{using_entropy}_{file_name}.csv"
+    file_name = f"ent{using_entropy}_log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})-mm({using_minmax})__ib{ignore_background}_c{command}.csv"
+    save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     print(len(train_data))
 
@@ -164,7 +163,9 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     print("평가 시작")
 
     if live:
-        train_multi_dict, train_label = make_quantization_dict_live_test(train_data, train_key)    
+        train_multi_dict, train_label = make_quantization_dict_live_test(train_data, train_key)
+        test_live(save_file, train_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
+        return 0
         test_live(save_file, test_attack_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
         test_live(save_file, test_benign_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = True)
     else:
@@ -172,9 +173,9 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
         
 
 if __name__ == "__main__":
-    min_data = 1
+    min_data = 10
     change_feature = True
-    count_prot = False
+    count_prot = True
     using_minmax = True
     add_src = True
     attack = 1 # 0이 정상 1이 공격 2가 혼합
@@ -182,14 +183,15 @@ if __name__ == "__main__":
     test_window = 10
     logN =128
     using_entropy = False
-    command = 1 # 
+    command = "최종확인-트레인" # 
     live = True
     n_ip_flow = 5000
     
     try:
         for data in ['all-dataset100']:
-            for ignore_background  in [True]:
-                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
+            for logN in [128]:
+                for ignore_background  in [True]:
+                    main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
