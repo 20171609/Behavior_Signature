@@ -148,18 +148,18 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                     # for i in range(8, 13):
         
 
-                    # #if global_.count_prot:
-                    # count_tmp = [0, 0, 0] # tcp, udp, icmp
+                    if global_.count_prot:
+                        count_tmp = [0, 0, 0] # tcp, udp, icmp
 
-                    # for p in flow_stack[target_ip]['protCount']:
-                    #     if p.upper() == 'TCP' or p == '6':
-                    #         count_tmp[0] += 1
-                        
-                    #     elif p.upper() == 'UDP' or p == '17':
-                    #         count_tmp[1] += 1
-                        
-                    #     elif p.upper() == 'ICMP' or p == '1':
-                    #         count_tmp[2] += 1
+                        for p in flow_stack[target_ip]['protCount']:
+                            if p.upper() == 'TCP' or p == '6':
+                                count_tmp[0] = 1
+                            
+                            elif p.upper() == 'UDP' or p == '17':
+                                count_tmp[1] = 1
+                            
+                            elif p.upper() == 'ICMP' or p == '1':
+                                count_tmp[2] = 1
 
                     tmp = log.multi_transform([tmp], False)
                     tmp = tmp[0]
@@ -167,8 +167,8 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                     if add_src:
                         tmp = f"{tmp}{flow_stack[target_ip]['total_src']}"
 
-                    # if global_.count_prot:
-                    #     tmp = f"{tmp}{count_tmp}"
+                    if global_.count_prot:
+                        tmp = f"{tmp}{count_tmp}"
 
                     sequence[target_ip].append(tmp)
 
