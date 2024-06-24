@@ -130,6 +130,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
         print("prot : ", len(train_prot))
         train_data = [f"{train}{prt}" for train, prt in zip(train_data, train_prot)]
 
+    print(train_data[0])
 
     if using_entropy :
         parameter += f'_pro({count_prot})_as({add_src})_log_entropy({n_components})'
@@ -183,7 +184,7 @@ if __name__ == "__main__":
     test_window = 10
     logN =128
     using_entropy = False
-    command = "Protocol Cardinality" # 
+    command = "real last" # 
     live = True
     n_ip_flow = 5000
     

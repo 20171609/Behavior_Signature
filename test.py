@@ -131,8 +131,8 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                     flow_stack[target_ip]['srcflag'].append(0)
                     flow_stack[target_ip]['total_src'] += 0
 
-                #if global_.count_prot:
-                # flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
+                if global_.count_prot:
+                    flow_stack[target_ip]['protCount'].append(flow['prot'])
                 
                 flow_stack[target_ip]['flow'].append(flow)
 
@@ -189,7 +189,9 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                     # max값 갱신되면 해당 train ip와 점수 넣기
                     if now == tmp:
                         flow_stack[target_ip]['total_src'] -= flow_stack[target_ip]['srcflag'].popleft()
-                        # flow_stack[target_ip]['protCount'].popleft()
+                        
+                        if global_.count_prot:
+                            flow_stack[target_ip]['protCount'].popleft()
                         
                         flow_stack[target_ip]['flow'].popleft()
                         flow_stack[target_ip]['label'].popleft()
@@ -229,7 +231,9 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                                         done_test_ip.add(target_ip)
                     
                     flow_stack[target_ip]['total_src'] -= flow_stack[target_ip]['srcflag'].popleft()
-                    # flow_stack[target_ip]['protCount'].popleft()
+                    
+                    if global_.count_prot:
+                        flow_stack[target_ip]['protCount'].popleft()
                     
                     flow_stack[target_ip]['flow'].popleft()
                     flow_stack[target_ip]['label'].popleft()
