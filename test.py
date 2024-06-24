@@ -152,6 +152,7 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                         count_tmp = [0, 0, 0] # tcp, udp, icmp
 
                         for p in flow_stack[target_ip]['protCount']:
+                            p = str(p)
                             if p.upper() == 'TCP' or p == '6':
                                 count_tmp[0] = 1
                             
