@@ -63,7 +63,7 @@ class log_Pattering:
             left = scale
                             
             if idx==(len_boundary-1):
-                right = max_data*1.5
+                right = max_data
             else:
                 right = original_list[idx+1]
             
@@ -212,7 +212,6 @@ class log_Pattering:
         return quan_data
 
 
-    
 def make_log_quan(train_raw, train_key, dataset_path, n_com, dp_log, use_entropy):
     train_attack = []
     if global_.attack == 1:
