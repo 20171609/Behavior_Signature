@@ -5,17 +5,14 @@ import pickle
 import glob
 from datetime import datetime 
 
-import matplotlib.pyplot as plt
-from GMM_Quantization import make_gmm
-from bayesian_block import make_Bayesian
 from log_quan import make_log_quan
 import global_
 from utils import *
 from profiling import b_profiling
 import traceback
-from test import test_live, test_no_live
+from test import test_live
 
-def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, test_window, n_components, using_minmax, using_entropy, ignore_background, command, live,n_ip_flow):
+def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, test_window, n_components, using_minmax, using_entropy, ignore_background, command, n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_attack_path = [rf"dataset\{dataset_path}\test_attack\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_attack'))]
     test_benign_path = [rf"dataset\{dataset_path}\test_benign\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_benign'))]
@@ -76,25 +73,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
 
     train_raw = np.array(train_raw)
-    # test_raw = np.array(test_raw)
-
-    # 표준편차
-    #train_raw[:, 12] = 0
-    
-    # duration관련
-    # test_raw[:, 7] = 0
-    # test_raw[:,12] = 0
-    # test_raw[:, 17] = 0
-    # test_raw[:, 22] = 0
-
-    #     if os.path.isfile(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl"):
-    #         with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'rb') as f:
-    #             train_data = pickle.load(f)
-                
-    #         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
-    #             test_data = pickle.load(f)
-                
-    #else:
     train_data = pattern_model.multi_transform(train_raw)
 
     parameter = f"cf({change_feature})_if({n_ip_flow})_min({min_data})_mm({using_minmax})_ib{ignore_background}_c{command}"
@@ -163,15 +141,10 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     # evaluate
     print("평가 시작")
 
-    if live:
-        train_multi_dict, train_label = make_quantization_dict_live_test(train_data, train_key)
-        # test_live(save_file, train_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
-        # return 0
-        test_live(save_file, test_attack_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
-        test_live(save_file, test_benign_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = True)
-    else:
-        train_multi_dict, train_label, attack_quan_set = make_quantization_dict(train_data, train_key)
-        
+    train_multi_dict, train_label = make_quantization_dict_live_test(train_data, train_key)
+    test_live(save_file, test_attack_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = False)
+    test_live(save_file, test_benign_path, min_data, ignore_background, pattern_model, add_src, train_multi_dict, train_label, benign_test = True)
+    
 
 if __name__ == "__main__":
     min_data = 10
@@ -182,16 +155,15 @@ if __name__ == "__main__":
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     
     test_window = 10
-    logN =128
+    logN =32
     using_entropy = False
-    command = "real last" # 
-    live = True
+    command = "50_only_test" 
     n_ip_flow = 5000
-    
+
     try:
-        for data in ['all-dataset100']:
+        for data in ['test']:
             for ignore_background  in [True]:
-                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, live, n_ip_flow)
+                main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_minmax, using_entropy, ignore_background, command, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()

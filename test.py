@@ -91,12 +91,6 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
                 if flow['Label'].upper() == 'BACKGROUND':
                     continue
 
-            # if flow['src_port'] == '':
-            #     flow['src_port'] = "-1"
-
-            # if flow['dst_port'] == '':
-            #     flow['dst_port'] = "-1"
-
             sip, dip = flow['source'], flow['destination']
             
             for target_ip in [sip, dip]:
