@@ -1,6 +1,6 @@
 import numpy as np
 
-def initialize(path, change_feature_, attack_, count_prot_, test_window_, n_max_flow_):
+def initialize(path, attack_, count_prot_, test_window_, n_max_flow_):
     global column_index
     
     with open(path, 'r', encoding='utf-8') as f:
@@ -14,12 +14,10 @@ def initialize(path, change_feature_, attack_, count_prot_, test_window_, n_max_
     global feature_func_map
     global attack
 
-    global change_feature
     global count_prot
     global test_window
     global n_max_flow
 
-    change_feature = change_feature_
     count_prot = count_prot_
     test_window = test_window_
     n_max_flow = n_max_flow_ 
@@ -51,15 +49,15 @@ def initialize(path, change_feature_, attack_, count_prot_, test_window_, n_max_
         'avg_dur':
             lambda x: np.mean(x['duration']),
         'std_target_pkts':
-            lambda x: np.std(x['target_pkts']) if not change_feature else np.std(x['target_pkts']) + np.mean(x['target_pkts']),
+            lambda x: np.std(x['target_pkts']) + np.mean(x['target_pkts']),
         'std_opposite_pkts':
-            lambda x: np.std(x['opposite_pkts']) if not change_feature else np.std(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
+            lambda x:  np.std(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
         'std_target_bytes':
-            lambda x: np.std(x['target_bytes']) if not change_feature else np.std(x['target_bytes']) + np.mean(x['target_bytes']),
+            lambda x: np.std(x['target_bytes']) + np.mean(x['target_bytes']),
         'std_opposite_bytes':
-            lambda x: np.std(x['opposite_bytes']) if not change_feature else np.std(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
+            lambda x: np.std(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
         'std_dur':
-            lambda x: np.std(x['duration']) if not change_feature else np.std(x['duration']) + np.mean(x['duration']),
+            lambda x: np.std(x['duration']) + np.mean(x['duration']),
         'max_target_pkts':
             lambda x: np.max(x['target_pkts']),
         'max_opposite_pkts':
@@ -81,7 +79,7 @@ def initialize(path, change_feature_, attack_, count_prot_, test_window_, n_max_
         'min_duration':
             lambda x: np.min(x['duration'])
     }
-    
+
 def change_col(path):
     global column_index
     

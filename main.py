@@ -12,14 +12,14 @@ from profiling import b_profiling
 import traceback
 from test import test_live
 
-def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, test_window, n_components, using_entropy, command, n_ip_flow):
+def main(dataset_path, min_data, attack, add_src, count_prot, test_window, n_components, using_entropy, command, n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_attack_path = [rf"dataset\{dataset_path}\test_attack\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_attack'))]
     test_benign_path = [rf"dataset\{dataset_path}\test_benign\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_benign'))]
 
-    global_.initialize(train_path[0], change_feature, attack, count_prot, test_window,n_ip_flow)
+    global_.initialize(train_path[0], attack, count_prot, test_window,n_ip_flow)
 
-    parameter = f"cf({change_feature})_if({n_ip_flow})_min({min_data})_c{command}"
+    parameter = f"if({n_ip_flow})_min({min_data})_c{command}"
 
     if not os.path.isdir(f"./preprocessing"):
         os.mkdir(f"./preprocessing")
@@ -59,7 +59,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
     # log datapath
-    dp_log = f"entropy({using_entropy})_log_n({n_components})_if({n_ip_flow})_atk({attack})_cf({change_feature})_min({min_data})_{command}c_log.pkl"
+    dp_log = f"entropy({using_entropy})_log_n({n_components})_if({n_ip_flow})_atk({attack})_min({min_data})_{command}c_log.pkl"
     
     if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
         print("LOG boundary 생성 해야함")
@@ -75,7 +75,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     train_raw = np.array(train_raw)
     train_data = pattern_model.multi_transform(train_raw)
 
-    parameter = f"cf({change_feature})_if({n_ip_flow})_min({min_data})_c{command}"
+    parameter = f"if({n_ip_flow})_min({min_data})_c{command}"
     
     if add_src:
         #데이터 불러오기
@@ -124,7 +124,7 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
 
-    file_name = f"ent{using_entropy}_log({logN})-if({n_ip_flow})-as({add_src})-cf({change_feature})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})_c{command}.csv"
+    file_name = f"ent{using_entropy}_log({logN})-if({n_ip_flow})-as({add_src})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})_c{command}.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     print(len(train_data))
@@ -145,7 +145,6 @@ def main(dataset_path, min_data, attack, change_feature, add_src, count_prot, te
 
 if __name__ == "__main__":
     min_data = 10
-    change_feature = True
     count_prot = True
     add_src = True
     attack = 1 # 0이 정상 1이 공격 2가 혼합
@@ -158,10 +157,10 @@ if __name__ == "__main__":
 
     try:
         for data in ['test']:
-            main(data, min_data, attack, change_feature, add_src, count_prot, test_window, logN, using_entropy, command, n_ip_flow)
+            main(data, min_data, attack, add_src, count_prot, test_window, logN, using_entropy, command, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
         with open('log.txt', 'a') as f:
-            f.write(f"{data}-{attack} attack-{change_feature} changefeature-{add_src} add_src- test에서 에러 발생\n")
+            f.write(f"{data}-{attack} attack- changefeature-{add_src} add_src- test에서 에러 발생\n")
             f.write(f"{error_info}\n\n")
