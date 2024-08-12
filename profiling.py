@@ -162,15 +162,12 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
 
                         else:
                             flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
-
-                    #if not global_.change_src:
                     
                     if target_ip.split('_')[0] == sip:
                         flow_stack[target_ip]['srcflag'].append(1)
                     else:
                         flow_stack[target_ip]['srcflag'].append(0)
 
-                    #if global_.count_prot:
                     flow_stack[target_ip]['protCount'].append(flow[column_index['prot']])
                     
                     flow_stack[target_ip]['flow'].append(flow)
@@ -186,11 +183,9 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path):
                         profile_list.append(tmp)
                         profile_key_list.append(f"{check_label(flow_stack[target_ip]['label'])}+{profile_key}+{file_name}")
 
-                        #if not global_.change_src:
                         profile_srcflag.append(sum(flow_stack[target_ip]['srcflag']))
                         flow_stack[target_ip]['srcflag'].popleft()
                         
-                        #if global_.count_prot:
                         count_tmp = [0, 0, 0] # tcp, udp, icmp
 
                         for p in flow_stack[target_ip]['protCount']:

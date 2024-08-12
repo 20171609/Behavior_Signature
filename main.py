@@ -12,7 +12,7 @@ from profiling import b_profiling
 import traceback
 from test import test_live
 
-def main(dataset_path, min_data, attack, add_src, count_prot, test_window, n_components, using_entropy, command, n_ip_flow):
+def main(dataset_path, min_data, attack, add_src, count_prot, test_window, bin_num, command, n_ip_flow):
     train_path = [rf"dataset\{dataset_path}\train\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'train'))]
     test_attack_path = [rf"dataset\{dataset_path}\test_attack\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_attack'))]
     test_benign_path = [rf"dataset\{dataset_path}\test_benign\{file}" for file in os.listdir(os.path.join("./dataset", dataset_path, 'test_benign'))]
@@ -59,21 +59,21 @@ def main(dataset_path, min_data, attack, add_src, count_prot, test_window, n_com
         os.mkdir(f'./preprocessing/{dataset_path}/LOG')
 
     # log datapath
-    dp_log = f"entropy({using_entropy})_log_n({n_components})_if({n_ip_flow})_atk({attack})_min({min_data})_{command}c_log.pkl"
+    dp_log = f"log_n({bin_num})_if({n_ip_flow})_atk({attack})_min({min_data})_{command}c_log.pkl"
     
     if not os.path.isfile(f"./preprocessing/{dataset_path}/LOG/{dp_log}"):
         print("LOG boundary 생성 해야함")
-        make_log_quan(train_raw, train_key, dataset_path, n_components,dp_log,using_entropy)
+        make_log_quan(train_raw, train_key, dataset_path, bin_num, dp_log, False)
 
-    print(f"log n:{n_components} {attack}attack LOG 불러옴")
+    print(f"log n:{bin_num} {attack}attack LOG 불러옴")
     
     with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'rb') as f:
         pattern_model = pickle.load(f)
 
-    parameter += f'_pro({count_prot})_as({add_src})_log({n_components})'
+    parameter += f'_pro({count_prot})_as({add_src})_log({bin_num})'
 
     train_raw = np.array(train_raw)
-    train_data = pattern_model.multi_transform(train_raw)
+    train_data = pattern_model.multi_transform(train_raw, False)
 
     parameter = f"if({n_ip_flow})_min({min_data})_c{command}"
     
@@ -107,10 +107,7 @@ def main(dataset_path, min_data, attack, add_src, count_prot, test_window, n_com
 
     print(train_data[0])
 
-    if using_entropy :
-        parameter += f'_pro({count_prot})_as({add_src})_log_entropy({n_components})'
-    else:
-        parameter += f'_pro({count_prot})_as({add_src})_log_bin({n_components})'
+    parameter += f'_pro({count_prot})_as({add_src})_log_bin({bin_num})'
 
     if not os.path.isdir(f"./debug_data"):
         os.mkdir(f"./debug_data")
@@ -124,7 +121,7 @@ def main(dataset_path, min_data, attack, add_src, count_prot, test_window, n_com
     with open(f"./debug_data/{dataset_path}/{parameter}/train_data_attack{attack}.pkl", 'wb') as f:
         pickle.dump(train_data,f)
 
-    file_name = f"ent{using_entropy}_log({logN})-if({n_ip_flow})-as({add_src})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})_c{command}.csv"
+    file_name = f"bin({bin_num})-if({n_ip_flow})-as({add_src})-prot({count_prot})-min({min_data})-atk({attack})-test_window({test_window})_c{command}.csv"
     save_file = f"./result/{dataset_path}/{file_name}.csv"
     
     print(len(train_data))
@@ -150,14 +147,13 @@ if __name__ == "__main__":
     attack = 1 # 0이 정상 1이 공격 2가 혼합
     
     test_window = 10
-    logN = 128
-    using_entropy = False
-    command = "test2" 
+    bin_num = 128
+    command = "entropy False" 
     n_ip_flow = 5000
 
     try:
         for data in ['test']:
-            main(data, min_data, attack, add_src, count_prot, test_window, logN, using_entropy, command, n_ip_flow)
+            main(data, min_data, attack, add_src, count_prot, test_window, bin_num, command, n_ip_flow)
 
     except:
         error_info = traceback.format_exc()
