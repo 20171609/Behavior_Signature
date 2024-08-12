@@ -1,6 +1,6 @@
 import numpy as np
 
-def initialize(path, change_feature_, attack_, count_prot_, test_window_, using_minmax,n_max_flow_):
+def initialize(path, change_feature_, attack_, count_prot_, test_window_, n_max_flow_):
     global column_index
     
     with open(path, 'r', encoding='utf-8') as f:
@@ -80,36 +80,8 @@ def initialize(path, change_feature_, attack_, count_prot_, test_window_, using_
             lambda x: np.min(x['opposite_bytes']),
         'min_duration':
             lambda x: np.min(x['duration'])
-    } if using_minmax else \
-    {
-        'card_target_port':
-            lambda x: len(set(x['target_port'])),
-        'card_opposite_ip':
-            lambda x: len(set(x['opposite_ip'])),
-        'card_opposite_port':
-            lambda x: len(set(x['opposite_port'])),
-        'avg_target_pkts':
-            lambda x: np.mean(x['target_pkts']),
-        'avg_opposite_pkts':
-            lambda x: np.mean(x['opposite_pkts']),
-        'avg_target_bytes':
-            lambda x: np.mean(x['target_bytes']),
-        'avg_opposite_bytes':
-            lambda x: np.mean(x['opposite_bytes']),
-        'avg_dur':
-            lambda x: np.mean(x['duration']),
-        'std_target_pkts':
-            lambda x: np.std(x['target_pkts']) if not change_feature else np.std(x['target_pkts']) + np.mean(x['target_pkts']),
-        'std_opposite_pkts':
-            lambda x: np.std(x['opposite_pkts']) if not change_feature else np.std(x['opposite_pkts']) + np.mean(x['opposite_pkts']),
-        'std_target_bytes':
-            lambda x: np.std(x['target_bytes']) if not change_feature else np.std(x['target_bytes']) + np.mean(x['target_bytes']),
-        'std_opposite_bytes':
-            lambda x: np.std(x['opposite_bytes']) if not change_feature else np.std(x['opposite_bytes']) + np.mean(x['opposite_bytes']),
-        'std_dur':
-            lambda x: np.std(x['duration']) if not change_feature else np.std(x['duration']) + np.mean(x['duration'])
     }
-
+    
 def change_col(path):
     global column_index
     
