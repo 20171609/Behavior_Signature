@@ -89,7 +89,7 @@ def add_flow(flow: list, target_ip):
     return attr_dict
 
 ## Behavior Profiling
-def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_background):
+def b_profiling(data_path, t, parameter, min_data, dataset_path):
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
@@ -124,9 +124,9 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                 if flow[0] == '':
                     continue
                 
-                if ignore_background:
-                    if flow[column_index['Label']].upper() == 'BACKGROUND':
-                        continue
+                # CTU-13 데이터셋을 위해 생성함.
+                if flow[column_index['Label']].upper() == 'BACKGROUND':
+                    continue
                 
                 if t == 'train' and (flow[column_index['Label']].upper() == 'BENIGN'):
                     continue
