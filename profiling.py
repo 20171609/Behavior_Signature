@@ -143,16 +143,15 @@ def b_profiling(data_path, t, parameter, min_data, dataset_path, ignore_backgrou
                     if t == 'train' and '*' not in target_ip:
                        continue
                         
-                    
                     if target_ip not in flow_stack:
                         flow_stack[target_ip] = {'flow': deque([]), 'label':deque([]),  'srcflag' : deque([]), 'protCount' : deque([])}
 
                     if target_ip not in ip_flowcount_dict:
                         ip_flowcount_dict[target_ip]=0
-                    elif ip_flowcount_dict[target_ip]>global_.n_max_flow:
+                    if ip_flowcount_dict[target_ip]>=global_.n_max_flow + min_data-1:
                         continue
-                    else:
-                        ip_flowcount_dict[target_ip]+=1
+                    
+                    ip_flowcount_dict[target_ip]+=1
 
                     if "*" in target_ip.split('_')[0]:
                         flow_stack[target_ip]['label'].append(flow[column_index['Label']].upper())
