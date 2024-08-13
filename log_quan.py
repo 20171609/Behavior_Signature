@@ -225,8 +225,8 @@ def make_log_quan(train_raw, train_key, dataset_path, n_com, dp_log, use_entropy
     else: 
         train_attack = train_raw
 
-    pattern_log = log_Pattering(ignore_idx=[0, 1, 2], n_log_ = n_com, n_jobs=1, using_entropy = use_entropy)
-    pattern_log.multi_fit(train_attack,use_entropy)
+    pattern_log = log_Pattering(ignore_idx=[0, 1, 2], n_log_ = n_com, n_jobs=1, using_entropy = False)
+    pattern_log.multi_fit(train_attack, False)
 
     with open(f"./preprocessing/{dataset_path}/LOG/{dp_log}", 'wb') as f:
         pickle.dump(pattern_log, f)

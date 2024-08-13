@@ -56,7 +56,7 @@ def find_label(label_dict, ip_list):
 
     return label_set
 
-def test_live(save_path, data_path, min_data, ignore_background, log, add_src, train_dict, train_label, benign_test):
+def test_live(save_path, data_path, min_data, log, add_src, train_dict, train_label, benign_test):
     feature_func_map = global_.feature_func_map
     feature_list = list(feature_func_map.keys())
 
@@ -86,16 +86,10 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
         for idx, flow in tqdm(df.iterrows(), total=len(df)):
             if flow['source'] == '':
                 continue
-
-            if ignore_background:
-                if flow['Label'].upper() == 'BACKGROUND':
-                    continue
-
-            # if flow['src_port'] == '':
-            #     flow['src_port'] = "-1"
-
-            # if flow['dst_port'] == '':
-            #     flow['dst_port'] = "-1"
+            
+            # CTU-13 데이터셋을 위해 생성함.
+            if flow['Label'].upper() == 'BACKGROUND':
+                continue
 
             sip, dip = flow['source'], flow['destination']
             
@@ -274,64 +268,3 @@ def test_live(save_path, data_path, min_data, ignore_background, log, add_src, t
         del label_dict
         del max_train_ip
         del df
-
-
-def test_no_live(save_file, test_path, parameter, min_data, dataset_path, ignore_background, log, add_src, count_prot, attack, train_multi_dict,  train_label, attack_quantization_multi_set):
-    print("test profiling 시작")
-    b_profiling(test_path, "test", parameter, min_data, dataset_path, ignore_background)
-    print("Test 끝")
-
-    test_raw = []
-    test_key = []
-
-    folder = f'./preprocessing/{dataset_path}/profiling/{parameter}'
-
-    # 'test_feature'로 시작하는 모든 파일 찾기
-    test_ffiles = glob.glob(os.path.join(folder, 'test_feature*'))
-    test_ffiles.sort()
-    for file in test_ffiles:
-        with open(file, 'rb') as f:
-            test_raw += pickle.load(f)
-    
-    # 'test_key'로 시작하는 모든 파일 찾기
-    test_kfiles = glob.glob(os.path.join(folder, 'test_key*'))
-    test_kfiles.sort()
-    for file in test_kfiles:
-        with open(file, 'rb') as f:
-            test_key += pickle.load(f)
-
-    test_data = log.multi_transform(test_raw)
-    test_src = []
-    test_prot = []
-
-    if add_src:
-        test_ffiles_src = glob.glob(os.path.join(folder, 'test_srcflag*'))
-        test_ffiles_src.sort()
-        for file in test_ffiles_src:
-            with open(file, 'rb') as f:
-                test_src += pickle.load(f)
-
-        test_data = [f"{test}{src}" for test, src in zip(test_data, test_src)]
-
-    if count_prot:
-        test_ffiles_prt = glob.glob(os.path.join(folder, 'test_protflag_*'))
-        test_ffiles_prt.sort()
-        for file in test_ffiles_prt:
-            with open(file, 'rb') as f:
-                test_prot += pickle.load(f)
-
-        test_data = [f"{test}{prt}" for test, prt in zip(test_data, test_prot)]
-
-
-    #         with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'rb') as f:
-    #             test_data = pickle.load(f)
-
-    # with open(f"./debug_data/{dataset_path}/{parameter}/test_data_attack{attack}.pkl", 'wb') as f:
-    #     pickle.dump(test_data,f)
-    
-    test_multi_dict, test_label = make_quantization_test_dict(test_data, test_key)
-    
-    # with open(f"./debug_data/{dataset_path}/{parameter}/test_multi_dict_attack{attack}.pkl", 'wb') as f:
-    #     pickle.dump(test_multi_dict,f)
-
-    evaluate_original(train_multi_dict,  train_label, attack_quantization_multi_set, test_multi_dict, test_label, save_file)
